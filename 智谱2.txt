@@ -1,0 +1,1348 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 上传文件文档
+
+> 向指定知识库上传文件类型文档，支持多种切片方式和回调。
+
+
+
+## OpenAPI
+
+````yaml openapi/openapi.json post /llm-application/open/document/upload_document/{id}
+openapi: 3.0.1
+info:
+  title: ZHIPU AI API
+  description: ZHIPU AI 接口提供强大的 AI 能力，包括聊天对话、工具调用和视频生成。
+  license:
+    name: ZHIPU AI 开发者协议和政策
+    url: https://chat.z.ai/legal-agreement/terms-of-service
+  version: 1.0.0
+  contact:
+    name: Z.AI 开发者
+    url: https://chat.z.ai/legal-agreement/privacy-policy
+    email: user_feedback@z.ai
+servers:
+  - url: https://open.bigmodel.cn/api/
+    description: 开放平台服务
+security:
+  - bearerAuth: []
+tags:
+  - name: 模型 API
+    description: Chat API
+  - name: 工具 API
+    description: Web Search API
+  - name: Agent API
+    description: Agent API
+  - name: 文件 API
+    description: File API
+  - name: 知识库 API
+    description: Knowledge API
+  - name: 实时 API
+    description: Realtime API
+  - name: 批处理 API
+    description: Batch API
+  - name: 助理 API
+    description: Assistant API
+  - name: 智能体 API（旧）
+    description: QingLiu Agent API
+paths:
+  /llm-application/open/document/upload_document/{id}:
+    post:
+      tags:
+        - 知识库 API
+      summary: 上传文件文档
+      description: 向指定知识库上传文件类型文档，支持多种切片方式和回调。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 知识库id
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentUploadRequest'
+        required: true
+      responses:
+        '200':
+          description: 业务处理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUploadResponse'
+        default:
+          description: 请求失败。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LlmApplicationError'
+components:
+  schemas:
+    DocumentUploadRequest:
+      type: object
+      properties:
+        files:
+          type: string
+          format: binary
+          description: 文件
+        knowledge_type:
+          type: integer
+          description: |-
+            文档类型，不传则动态解析。
+            1: 按标题段落切：支持txt,doc,pdf,url,docx,ppt,pptx,md
+            2: 按问答对切片：支持txt,doc,pdf,url,docx,ppt,pptx,md
+            3: 按行切片：支持xls,xlsx,csv
+            5: 自定义切片：支持txt,doc,pdf,url,docx,ppt,pptx,md
+            6: 按页切片：支持pdf,ppt,pptx
+            7: 按单个切片：支持xls,xlsx,csv
+        custom_separator:
+          type: array
+          items:
+            type: string
+          description: |
+            自定义切片规则，knowledge_type=5时传，默认
+        sentence_size:
+          type: integer
+          description: 自定义切片大小，knowledge_type=5时传，20-2000，默认300
+        parse_image:
+          type: boolean
+          description: 是否解析图片，默认不解析
+        callback_url:
+          type: string
+          description: 回调地址
+        callback_header:
+          type: object
+          description: 回调时header携带的k-v
+        word_num_limit:
+          type: string
+          description: 文档字数上限，必须为数字
+        req_id:
+          type: string
+          description: 请求唯一id
+      required:
+        - files
+    DocumentUploadResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            successInfos:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentUploadSuccessInfo'
+              description: 上传成功的文件
+            failedInfos:
+              type: array
+              items:
+                $ref: '#/components/schemas/DocumentUploadFailedInfo'
+              description: 上传失败的文件
+        code:
+          type: integer
+          description: 响应码，200为成功
+        message:
+          type: string
+          description: 响应信息
+        timestamp:
+          type: integer
+          description: 响应时间戳
+    LlmApplicationError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    DocumentUploadSuccessInfo:
+      type: object
+      properties:
+        documentId:
+          type: string
+          description: 文档ID
+        fileName:
+          type: string
+          description: 文件名
+    DocumentUploadFailedInfo:
+      type: object
+      properties:
+        fileName:
+          type: string
+          description: 文件名
+        failReason:
+          type: string
+          description: 失败原因
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        使用以下格式进行身份验证：Bearer [<your api
+        key>](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)
+
+````> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 上传URL文档
+
+> 上传`URL`类型的文档或网页作为内容填充知识库。
+
+
+
+## OpenAPI
+
+````yaml openapi/openapi.json post /llm-application/open/document/upload_url
+openapi: 3.0.1
+info:
+  title: ZHIPU AI API
+  description: ZHIPU AI 接口提供强大的 AI 能力，包括聊天对话、工具调用和视频生成。
+  license:
+    name: ZHIPU AI 开发者协议和政策
+    url: https://chat.z.ai/legal-agreement/terms-of-service
+  version: 1.0.0
+  contact:
+    name: Z.AI 开发者
+    url: https://chat.z.ai/legal-agreement/privacy-policy
+    email: user_feedback@z.ai
+servers:
+  - url: https://open.bigmodel.cn/api/
+    description: 开放平台服务
+security:
+  - bearerAuth: []
+tags:
+  - name: 模型 API
+    description: Chat API
+  - name: 工具 API
+    description: Web Search API
+  - name: Agent API
+    description: Agent API
+  - name: 文件 API
+    description: File API
+  - name: 知识库 API
+    description: Knowledge API
+  - name: 实时 API
+    description: Realtime API
+  - name: 批处理 API
+    description: Batch API
+  - name: 助理 API
+    description: Assistant API
+  - name: 智能体 API（旧）
+    description: QingLiu Agent API
+paths:
+  /llm-application/open/document/upload_url:
+    post:
+      tags:
+        - 知识库 API
+      summary: 上传URL文档
+      description: 上传`URL`类型的文档或网页作为内容填充知识库。
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlKnowledgeRequest'
+        required: true
+      responses:
+        '200':
+          description: 请求成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlKnowledgeResponse'
+              example:
+                data:
+                  successInfos:
+                    - documentId: '122121212'
+                      url: xxx.com
+                    - documentId: '12121212121'
+                      url: xxx.com
+                  failedInfos:
+                    - url: xxx.com
+                      failReason: 不支持的文档类型
+                code: 200
+                message: 请求成功
+                timestamp: 1689649504996
+        default:
+          description: 请求失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LlmApplicationError'
+components:
+  schemas:
+    UploadUrlKnowledgeRequest:
+      type: object
+      properties:
+        upload_detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/UrlData'
+          description: url列表
+        knowledge_id:
+          type: string
+          description: 知识库id
+      required:
+        - upload_detail
+        - knowledge_id
+    UploadUrlKnowledgeResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            successInfos:
+              type: array
+              items:
+                type: object
+                properties:
+                  documentId:
+                    type: string
+                    description: 文档id
+                  url:
+                    type: string
+                    description: url
+            failedInfos:
+              type: array
+              items:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: url
+                  failReason:
+                    type: string
+                    description: 失败原因
+        code:
+          type: integer
+          description: 状态码
+        message:
+          type: string
+          description: 返回信息
+        timestamp:
+          type: integer
+          description: 时间戳
+    LlmApplicationError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+    UrlData:
+      type: object
+      properties:
+        url:
+          type: string
+          description: url
+        knowledge_type:
+          type: integer
+          description: 文档切片类型
+        custom_separator:
+          type: array
+          items:
+            type: string
+          description: |
+            自定义切片分隔符，仅 knowledge_type=5 时生效，默认 
+        sentence_size:
+          type: integer
+          description: 自定义切片字数，仅 knowledge_type=5 时生效，20-2000，默认300
+        callback_url:
+          type: string
+          description: 回调地址
+        callback_header:
+          type: object
+          description: 回调header k-v
+      required:
+        - url
+        - knowledge_type
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        使用以下格式进行身份验证：Bearer [<your api
+        key>](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)
+
+````> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 智能体对话
+
+> 与智能体进行对话交互。支持同步和流式调用，提供智能体的专业能力。见 [智能体文档](/cn/guide/agents/translation)
+
+
+
+## OpenAPI
+
+````yaml openapi/openapi.json post /v1/agents
+openapi: 3.0.1
+info:
+  title: ZHIPU AI API
+  description: ZHIPU AI 接口提供强大的 AI 能力，包括聊天对话、工具调用和视频生成。
+  license:
+    name: ZHIPU AI 开发者协议和政策
+    url: https://chat.z.ai/legal-agreement/terms-of-service
+  version: 1.0.0
+  contact:
+    name: Z.AI 开发者
+    url: https://chat.z.ai/legal-agreement/privacy-policy
+    email: user_feedback@z.ai
+servers:
+  - url: https://open.bigmodel.cn/api/
+    description: 开放平台服务
+security:
+  - bearerAuth: []
+tags:
+  - name: 模型 API
+    description: Chat API
+  - name: 工具 API
+    description: Web Search API
+  - name: Agent API
+    description: Agent API
+  - name: 文件 API
+    description: File API
+  - name: 知识库 API
+    description: Knowledge API
+  - name: 实时 API
+    description: Realtime API
+  - name: 批处理 API
+    description: Batch API
+  - name: 助理 API
+    description: Assistant API
+  - name: 智能体 API（旧）
+    description: QingLiu Agent API
+paths:
+  /v1/agents:
+    post:
+      tags:
+        - Agent API
+      summary: 智能体对话
+      description: 与智能体进行对话交互。支持同步和流式调用，提供智能体的专业能力。见 [智能体文档](/cn/guide/agents/translation)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+        required: true
+      responses:
+        '200':
+          description: 业务处理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        default:
+          description: 请求失败。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    AgentRequest:
+      type: object
+      required:
+        - agent_id
+        - messages
+      properties:
+        agent_id:
+          oneOf:
+            - type: string
+              enum:
+                - general_translation
+                - slides_glm_agent
+                - cartoon_generator_agent
+                - ai_drawing_agent
+                - receipt_recognition_agent
+                - clothes_recognition_agent
+                - contract_parser_agent
+                - service_check_agent
+                - subtitle_translation_agent
+                - intelligent_education_correction_agent
+                - job_matching_agent
+                - social_translation_agent
+                - social_literature_translation_agent
+                - intelligent_education_solve_agent
+                - vidu_template_agent
+                - bidwin_parser_agent
+              description: >-
+                此处提供 通用翻译智能体 `general_translation`
+                的拓展参数模板作为示例，其他内嵌智能体需要参考文档在下方手动设置拓展参数。
+          description: 智能体 ID
+        stream:
+          type: boolean
+          description: 是否选择流式输出。当一个 `agent` 提供流式与非流式两种输出方式时，可根据需求选择一种。
+          default: false
+        messages:
+          type: array
+          description: 会话消息体列表。
+          items:
+            type: object
+            required:
+              - role
+              - content
+            properties:
+              role:
+                type: string
+                description: 消息作者的角色。用户输入时 `role = user`。
+                enum:
+                  - system
+                  - user
+                  - assistant
+                example: user
+              content:
+                oneOf:
+                  - type: string
+                    description: 用户输入的文本内容。
+                    example: 请帮我翻译这段文字：Hello World
+                  - type: object
+                    description: 单个多模态内容，用于只有一个元素的情况
+                    properties:
+                      type:
+                        type: string
+                        description: 内容类型，可以是文本、文件`ID`、文件链接或图片链接
+                        enum:
+                          - text
+                          - file_id
+                          - file_url
+                          - image_url
+                      text:
+                        type: string
+                        description: 当 `type` 为 `text` 时的文本内容
+                        example: 请帮我翻译这段文字：Hello World
+                      file_id:
+                        type: string
+                        description: 当 `type` 为 `file_id` 时的文件唯一标识
+                        example: agent-1750681215-9b92722d788f4b32bab28cc333293584
+                      file_url:
+                        type: string
+                        description: 当 `type` 为 `file_url` 时的文件链接
+                        example: https://example.com/my_oss/document.pdf
+                      image_url:
+                        type: string
+                        description: 当 `type` 为 `image_url` 时的图片链接
+                        example: https://example.com/my_oss/image.png
+                    required:
+                      - type
+                  - type: array
+                    description: 多模态内容数组，支持文本、文件和图片
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: 内容类型，可以是文本、文件`ID`、文件链接或图片链接
+                          enum:
+                            - text
+                            - file_id
+                            - file_url
+                            - image_url
+                        text:
+                          type: string
+                          description: 当 `type` 为 `text` 时的文本内容
+                          example: 请帮我翻译这段文字：Hello World
+                        file_id:
+                          type: string
+                          description: 当 `type` 为 `file_id` 时的文件唯一标识
+                          example: agent-1750681215-9b92722d788f4b32bab28cc333293584
+                        file_url:
+                          type: string
+                          description: 当 `type` 为 `file_url` 时的文件链接
+                          example: https://example.com/my_oss/document.pdf
+                        image_url:
+                          type: string
+                          description: 当 `type` 为 `image_url` 时的图片链接
+                          example: https://example.com/my_oss/image.png
+                      required:
+                        - type
+          minItems: 1
+        custom_variables:
+          description: 智能体扩展参数。根据不同智能体的需求提供相应的参数配置。
+          oneOf:
+            - $ref: '#/components/schemas/TranslationAgentCustomVariables'
+              title: 通用翻译智能体
+            - $ref: '#/components/schemas/CustomAgentCustomVariables'
+              title: 自定义智能体扩展
+    AgentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 请求唯一标识
+        agent_id:
+          type: string
+          description: 智能体唯一标识
+        conversation_id:
+          type: string
+          description: 对话唯一标识
+        async_id:
+          type: string
+          description: 异步任务唯一标识（异步调用时出现）
+        choices:
+          type: array
+          description: 智能体响应列表。
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+                description: 结果索引。
+              messages:
+                type: array
+                description: 智能体生成的响应消息列表。
+                items:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      description: 响应角色，通常为 `assistant`。
+                      example: assistant
+                    content:
+                      oneOf:
+                        - type: string
+                          description: 智能体生成的响应内容（纯文本格式）。
+                        - type: object
+                          description: 单个多模态响应内容，用于响应只有一个元素的情况
+                          properties:
+                            type:
+                              type: string
+                              description: 内容类型，可以是文本、文件、图片、音频或视频
+                              enum:
+                                - text
+                                - file_url
+                                - image_url
+                                - audio_url
+                                - video_url
+                            text:
+                              type: string
+                              description: 当 `type` 为 `text` 时的文本内容
+                            file_url:
+                              type: string
+                              description: 当 `type` 为 `file_url` 时的文件链接
+                            image_url:
+                              type: string
+                              description: 当 `type` 为 `image_url` 时的图片链接
+                            audio_url:
+                              type: string
+                              description: 当 `type` 为 `audio_url` 时的音频链接
+                            video_url:
+                              type: string
+                              description: 当 `type` 为 `video_url` 时的视频链接
+                          required:
+                            - type
+                        - type: array
+                          description: 多模态响应内容数组，支持文本、文件、图片、音频和视频
+                          items:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                description: 内容类型，可以是文本、文件、图片、音频或视频
+                                enum:
+                                  - text
+                                  - file_url
+                                  - image_url
+                                  - audio_url
+                                  - video_url
+                              text:
+                                type: string
+                                description: 当 `type` 为 `text` 时的文本内容
+                              file_url:
+                                type: string
+                                description: 当 `type` 为 `file_url` 时的文件链接
+                              image_url:
+                                type: string
+                                description: 当 `type` 为 `image_url` 时的图片链接
+                              audio_url:
+                                type: string
+                                description: 当 `type` 为 `audio_url` 时的音频链接
+                              video_url:
+                                type: string
+                                description: 当 `type` 为 `video_url` 时的视频链接
+                            required:
+                              - type
+              finish_reason:
+                type: string
+                description: >-
+                  响应结束原因。可能的取值为 正常结束-`stop`、长度达到上限-`length`、内容敏感-`sensitive` 或
+                  网络错误-`network_error`。
+        usage:
+          $ref: '#/components/schemas/UsageStatistics'
+    Error:
+      type: object
+      properties:
+        error:
+          required:
+            - code
+            - message
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+    TranslationAgentCustomVariables:
+      type: object
+      description: 当前为 [通用翻译智能体](/cn/guide/agents/translation) `general_translation` 扩展参数预设
+      properties:
+        source_lang:
+          type: string
+          description: 待翻译文本的源语言代码，默认值为 `auto`
+          default: auto
+          enum:
+            - auto
+            - zh-CN
+            - zh-TW
+            - wyw
+            - yue
+            - en
+            - ja
+            - ko
+            - fr
+            - de
+            - es
+            - ru
+            - pt
+            - it
+            - ar
+            - hi
+            - bg
+            - cs
+            - da
+            - el
+            - et
+            - fi
+            - hu
+            - id
+            - lt
+            - lv
+            - nl
+            - 'no'
+            - pl
+            - ro
+            - sk
+            - sl
+            - sv
+            - th
+            - tr
+            - uk
+            - vi
+            - my
+            - ms
+            - Pinyin
+            - IPA
+        target_lang:
+          type: string
+          description: 待翻译文本的目标语言代码，默认为 `zh-CN`
+          default: zh-CN
+          enum:
+            - zh-CN
+            - zh-TW
+            - wyw
+            - yue
+            - en
+            - en-GB
+            - en-US
+            - ja
+            - ko
+            - fr
+            - de
+            - es
+            - ru
+            - pt
+            - it
+            - ar
+            - hi
+            - bg
+            - cs
+            - da
+            - el
+            - et
+            - fi
+            - hu
+            - id
+            - lt
+            - lv
+            - nl
+            - 'no'
+            - pl
+            - ro
+            - sk
+            - sl
+            - sv
+            - th
+            - tr
+            - uk
+            - vi
+            - my
+            - ms
+            - Pinyin
+            - IPA
+        glossary:
+          type: string
+          description: 术语表`id`
+        strategy:
+          type: string
+          description: 翻译策略
+          default: general
+          enum:
+            - general
+            - paraphrase
+            - two_step
+            - three_step
+            - reflection
+            - cot
+        strategy_config:
+          type: object
+          description: 翻译策略对应的参数
+          properties:
+            general:
+              type: object
+              description: 当翻译策略指定为`general`时生效
+              properties:
+                suggestion:
+                  type: string
+                  description: 翻译建议或风格要求，如术语对照、文体规范等
+            cot:
+              type: object
+              description: 当翻译策略指定为`cot`时生效
+              properties:
+                reason_lang:
+                  type: string
+                  description: 翻译理由的语言，取值 ["from"｜"to"]，默认 "to"
+                  default: to
+                  enum:
+                    - from
+                    - to
+      example:
+        source_lang: en
+        target_lang: zh-CN
+        strategy: general
+        strategy_config:
+          general:
+            suggestion: 专业技术文档翻译风格
+    CustomAgentCustomVariables:
+      type: object
+      description: 自定义其它智能体的扩展参数，具体参数字段可参考对应的[智能体文档](/cn/guide/agents/translation)
+      additionalProperties: true
+      example:
+        custom_param1: value1
+        custom_param2: 42
+        options:
+          detailed: true
+          format: json
+    UsageStatistics:
+      type: object
+      description: 调用结束时返回的 `Token` 使用统计。
+      properties:
+        prompt_tokens:
+          type: integer
+          description: 用户输入的 `Token` 数量
+        completion_tokens:
+          type: integer
+          description: 输出的 `Token` 数量
+        total_tokens:
+          type: integer
+          description: '`Token` 总数'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        使用以下格式进行身份验证：Bearer [<your api
+        key>](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)
+
+````> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 对话历史
+
+> 查询智能体对话历史，现仅支持 `slides_glm_agent` 智能体
+
+
+
+## OpenAPI
+
+````yaml openapi/openapi.json post /v1/agents/conversation
+openapi: 3.0.1
+info:
+  title: ZHIPU AI API
+  description: ZHIPU AI 接口提供强大的 AI 能力，包括聊天对话、工具调用和视频生成。
+  license:
+    name: ZHIPU AI 开发者协议和政策
+    url: https://chat.z.ai/legal-agreement/terms-of-service
+  version: 1.0.0
+  contact:
+    name: Z.AI 开发者
+    url: https://chat.z.ai/legal-agreement/privacy-policy
+    email: user_feedback@z.ai
+servers:
+  - url: https://open.bigmodel.cn/api/
+    description: 开放平台服务
+security:
+  - bearerAuth: []
+tags:
+  - name: 模型 API
+    description: Chat API
+  - name: 工具 API
+    description: Web Search API
+  - name: Agent API
+    description: Agent API
+  - name: 文件 API
+    description: File API
+  - name: 知识库 API
+    description: Knowledge API
+  - name: 实时 API
+    description: Realtime API
+  - name: 批处理 API
+    description: Batch API
+  - name: 助理 API
+    description: Assistant API
+  - name: 智能体 API（旧）
+    description: QingLiu Agent API
+paths:
+  /v1/agents/conversation:
+    post:
+      tags:
+        - Agent API
+      summary: 对话历史
+      description: 查询智能体对话历史，现仅支持 `slides_glm_agent` 智能体
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlmSlideAgentConversationRequest'
+        required: true
+      responses:
+        '200':
+          description: 处理成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlmSlideAgentConversationResponse'
+        default:
+          description: 请求失败
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    GlmSlideAgentConversationRequest:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          description: 智能体 `ID`
+        conversation_id:
+          type: string
+          description: 对话 `ID`
+        custom_variables:
+          type: object
+          description: 自定义参数
+          properties:
+            include_pdf:
+              type: boolean
+              description: 是否导出 `pdf` 文件
+            pages:
+              type: array
+              description: '`Slide` 页信息'
+              items:
+                type: object
+                properties:
+                  position:
+                    type: number
+                    description: '`Slide` 页码'
+                  width:
+                    type: number
+                    description: '`Slide` 宽度, 单位: `cm`'
+                  height:
+                    type: number
+                    description: '`Slide` 高度, 单位: `cm`'
+    GlmSlideAgentConversationResponse:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+          description: 对话 `ID`
+        agent_id:
+          type: string
+          description: 智能体 `ID`
+        choices:
+          type: array
+          description: Agent output.
+          items:
+            type: object
+            properties:
+              message:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      description: 智能体的角色 `role = assistant`
+                    content:
+                      type: array
+                      description: 智能体响应内容
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            description: 响应内容类型：文件下载链接-`file_url`、图片下载链接-`image_url`
+                          tag_cn:
+                            type: string
+                            description: CN Tag.
+                          tag_en:
+                            type: string
+                            description: EN Tag.
+                          file_url:
+                            type: string
+                            description: 如果 `type = file_url`，则这个字段给出文件的具体下载链接
+                          image_url:
+                            type: string
+                            description: 如果 `type = image_url`，则这个字段给出图片的具体下载链接
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code.
+            message:
+              type: string
+              description: Error message.
+    Error:
+      type: object
+      properties:
+        error:
+          required:
+            - code
+            - message
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        使用以下格式进行身份验证：Bearer [<your api
+        key>](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)
+
+````> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 错误码
+
+调用智谱AI 开放平台 API 时，接收到的响应码由两部分组成：外层是 HTTP 状态码，内层是响应体正文中的定义的业务错误码，提供了更具体的错误描述。
+
+## HTTP 状态错误码
+
+| 状态码 | 原因                                       | 解决方法                                                                  |
+| :-- | :--------------------------------------- | :-------------------------------------------------------------------- |
+| 200 | 业务处理成功                                   | -                                                                     |
+| 400 | 参数错误                                     | 检查接口参数是否正确                                                            |
+| 400 | 文件内容异常                                   | 检查 jsonl 文件内容是否符合要求                                                   |
+| 401 | 鉴权失败或 Token 超时                           | 确认 API KEY 和鉴权 token 是否正确生成                                           |
+| 404 | 微调功能未开放                                  | 联系客服以开通此功能                                                            |
+| 404 | 微调任务不存在                                  | 确保微调任务 ID 正确                                                          |
+| 429 | 接口请求并发超额                                 | 调整请求频率或联系商务扩大并发数                                                      |
+| 429 | 上传文件频率过快                                 | 短暂等待后重新请求                                                             |
+| 429 | 账户余额已用完                                  | 进行账户充值以确保余额充足                                                         |
+| 429 | 账户异常                                     | 账户存违规行为，请联系平台客服或[service@zhipuai.cn](mailto:service@zhipuai.cn)解除相关锁定 |
+| 429 | 终端账号异常                                   | 终端用户存在违规行为，账号已被锁定                                                     |
+| 434 | 暂无 API 权限，微调 API 及文件管理 API 为内测阶段，我们会尽快开放 | 等待接口正式开放或请联系平台客服申请内测                                                  |
+| 435 | 文件大小超过 100MB                             | 使用小于 100MB 的 jsonl 文件或分批上传                                            |
+| 500 | 服务器处理请求时发生错误                             | 稍后重试或联系客服                                                             |
+
+## 业务错误码
+
+| 错误分类       | 错误码  | 错误信息                                                                                                          |
+| :--------- | :--- | :------------------------------------------------------------------------------------------------------------ |
+| 基础错误       | 500  | 内部错误                                                                                                          |
+| 身份验证错误     | 1000 | 身份验证失败                                                                                                        |
+|            | 1001 | Header 中未收到 Authentication 参数，无法进行身份验证                                                                        |
+|            | 1002 | Authentication Token 非法，请确认 Authentication Token 正确传递                                                         |
+|            | 1003 | Authentication Token 已过期，请重新生成/获取                                                                             |
+|            | 1004 | 通过 Authentication Token 的验证失败                                                                                 |
+|            | 1100 | 账户读写                                                                                                          |
+| 账户错误       | 1110 | 您的账户当前处于非活动状态。请检查账户信息                                                                                         |
+|            | 1111 | 您的账户不存在                                                                                                       |
+|            | 1112 | 您的账户已被锁定，请联系客服解锁                                                                                              |
+|            | 1113 | 您的账户已欠费，请充值后重试                                                                                                |
+|            | 1120 | 无法成功访问您的账户，请稍后重试                                                                                              |
+|            | 1121 | 账户存违规行为，账号已被锁定                                                                                                |
+| API 调用错误   | 1200 | API 调用错误                                                                                                      |
+|            | 1210 | API 调用参数有误，请检查文档                                                                                              |
+|            | 1211 | 模型不存在，请检查模型代码                                                                                                 |
+|            | 1212 | 当前模型不支持 `${method}` 调用方式                                                                                      |
+|            | 1213 | 未正常接收到 `${field}` 参数                                                                                          |
+|            | 1214 | `${field}` 参数非法。请检查文档                                                                                         |
+|            | 1215 | `${field1}` 与 `${field2}` 不能同时设置，请检查文档                                                                        |
+|            | 1220 | 您无权访问 `${API_name}`                                                                                           |
+|            | 1221 | API `${API_name}` 已下线                                                                                         |
+|            | 1222 | API `${API_name}` 不存在                                                                                         |
+|            | 1230 | API 调用流程出错                                                                                                    |
+|            | 1231 | 您已有请求：`${request_id}`                                                                                         |
+|            | 1234 | 网络错误，错误id：`${error_id}`，请联系客服                                                                                 |
+| API 策略阻止错误 | 1300 | API 调用被策略阻止                                                                                                   |
+|            | 1301 | 系统检测到输入或生成内容可能包含不安全或敏感内容，请您避免输入易产生敏感内容的提示语，感谢您的配合                                                             |
+|            | 1302 | 您当前使用该 API 的并发数过高，请降低并发，或联系客服增加限额                                                                             |
+|            | 1303 | 您当前使用该 API 的频率过高，请降低频率，或联系客服增加限额                                                                              |
+|            | 1304 | 该 API 已达今日调用次数限额，如有更多需求，请联系客服购买                                                                               |
+|            | 1305 | 该 API 已触发流量限制                                                                                                 |
+|            | 1308 | 已达到 `${number}` `${unit}` 的使用上限。您的限额将在 `${next_flush_time}` 重置。                                               |
+|            | 1309 | 您的 GLM Coding Plan 套餐已到期，暂无法使用，前往官方续订后即可恢复 [https://bigmodel.cn/claude-code](https://bigmodel.cn/claude-code) |
+
+## 错误响应示例
+
+以下是 curl 请求的响应报文，其中 401 是 HTTP 状态码，1002 是业务错误码。
+
+```
+* We are completely uploaded and fine
+< HTTP/2 401
+< date: Wed, 20 Mar 2024 03:06:05 GMT
+< content-type: application/json
+< set-cookie: acw_tc=76b20****a0e42;path=/;HttpOnly;Max-Age=1800
+< server: nginx/1.21.6
+< vary: Origin
+< vary: Access-Control-Request-Method
+< vary: Access-Control-Request-Headers
+<
+* Connection #0 to host open.bigmodel.cn left intact
+{"error":{"code":"1002","message":"Authorization Token非法，请确认Authorization Token正确传递。"}}
+```
+
+> **注：** 使用流式（SSE）调用时，如果 API 在推理过程中异常终止，不会返回上述错误码，而是在响应体的 `finish_reason` 参数中返回异常原因，详情请参考 `finish_reason` 的参数说明。
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.bigmodel.cn/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# 使用概述
+
+<Info>
+  API 参考文档描述了您可以用来与 智谱AI 开放平台交互的 RESTful API 详情信息，您也可以通过点击 Try it 按钮调试 API。
+</Info>
+
+智谱AI 开放平台提供标准的 HTTP API 接口，支持多种编程语言和开发环境，同时也提供 [SDKs](/cn/guide/develop/python/introduction) 方便开发者调用。
+
+## API 端点
+
+智谱AI 开放平台的通用 API 端点如下：
+
+```
+https://open.bigmodel.cn/api/paas/v4
+```
+
+<Warning>
+  注意：使用 [GLM 编码套餐](/cn/coding-plan/overview) 时，需要配置专属的 \
+  Coding 端点 - [https://open.bigmodel.cn/api/coding/paas/v4](https://open.bigmodel.cn/api/coding/paas/v4) \
+  而非通用端点 - [https://open.bigmodel.cn/api/paas/v4/](https://open.bigmodel.cn/api/paas/v4/) \
+  注意：Coding API 端点仅限 Coding 场景，并不适用通用 API 场景，请区分使用。
+</Warning>
+
+## 身份验证
+
+开放平台 API 使用标准的 **HTTP Bearer** 进行身份验证。
+认证需要 API 密钥，您可以在 [API Keys 页面](https://bigmodel.cn/usercenter/proj-mgmt/apikeys) 创建或管理。
+
+API 密钥应通过 HTTP 请求头中的 HTTP Bearer 身份验证提供。
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+<Tip>
+  建议将 API Key 设置为环境变量替代硬编码到代码中，以提高安全性。
+</Tip>
+
+## 调试工具
+
+在 API 详情页面，右上方有丰富的 **调用示例**，可以点击切换查看不同场景的示例。<br />
+提供 API 调试工具允许开发者快速尝试 API 调用。只需在 API 详情页面点击 **Try it** 即可开始。
+
+* 在 API 详情页面，有许多交互选项，有些交互按钮可能不容易发现需要您留意，例如 **切换输入类型下拉框**、**切换标签页** 和 **添加新内容** 等。
+* 您可以点击 **Add an item** 或 **Add new property** 来添加 API 需要的更多属性。
+* **注意**: 当切换不同标签页后，您需要重新输入或重新切换之前的属性值。
+
+## 调用示例
+
+<Tabs>
+  <Tab title="cURL">
+    ```bash  theme={null}
+    curl -X POST "https://open.bigmodel.cn/api/paas/v4/chat/completions" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -d '{
+        "model": "glm-4.7",
+        "messages": [
+            {
+                "role": "system",
+                "content": "你是一个有用的AI助手。"
+            },
+            {
+                "role": "user",
+                "content": "你好，请介绍一下自己。"
+            }
+        ],
+        "temperature": 1.0,
+        "stream": true
+    }'
+    ```
+  </Tab>
+
+  <Tab title="Python SDK">
+    **安装 SDK**
+
+    ```bash  theme={null}
+    # 安装最新版本
+    pip install zai-sdk
+
+    # 或指定版本
+    pip install zai-sdk==0.2.2
+    ```
+
+    **验证安装**
+
+    ```python  theme={null}
+    import zai
+    print(zai.__version__)
+    ```
+
+    **使用示例**
+
+    ```python  theme={null}
+    from zai import ZhipuAiClient
+
+    # 初始化客户端
+    client = ZhipuAiClient(api_key="YOUR_API_KEY")
+
+    # 创建聊天完成请求
+    response = client.chat.completions.create(
+        model="glm-4.7",
+        messages=[
+            {
+                "role": "system",
+                "content": "你是一个有用的AI助手。"
+            },
+            {
+                "role": "user",
+                "content": "你好，请介绍一下自己。"
+            }
+        ],
+        temperature=0.6
+    )
+
+    # 获取回复
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+
+  <Tab title="Java SDK">
+    **安装 SDK**
+
+    **Maven**
+
+    ```xml  theme={null}
+    <dependency>
+        <groupId>ai.z.openapi</groupId>
+        <artifactId>zai-sdk</artifactId>
+        <version>0.3.3</version>
+    </dependency>
+    ```
+
+    **Gradle (Groovy)**
+
+    ```groovy  theme={null}
+    implementation 'ai.z.openapi:zai-sdk:0.3.3'
+    ```
+
+    **使用示例**
+
+    ```java  theme={null}
+    import ai.z.openapi.ZhipuAiClient;
+    import ai.z.openapi.service.model.*;
+    import java.util.Arrays;
+
+    public class QuickStart {
+        public static void main(String[] args) {
+            // 初始化客户端
+            ZhipuAiClient client = ZhipuAiClient.builder().ofZHIPU()
+                .apiKey("YOUR_API_KEY")
+                .build();
+
+            // 创建聊天完成请求
+            ChatCompletionCreateParams request = ChatCompletionCreateParams.builder()
+                .model("glm-4.7")
+                .messages(Arrays.asList(
+                    ChatMessage.builder()
+                        .role(ChatMessageRole.USER.value())
+                        .content("Hello, who are you?")
+                        .build()
+                ))
+                .stream(false)
+                .temperature(0.6f)
+                .maxTokens(1024)
+                .build();
+
+            // 发送请求
+            ChatCompletionResponse response = client.chat().createChatCompletion(request);
+
+            // 获取回复
+            System.out.println(response.getData().getChoices().get(0).getMessage());
+        }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Python SDK(旧)">
+    **安装 SDK**
+
+    ```bash  theme={null}
+    # 安装最新版本
+    pip install zhipuai
+
+    # 或指定版本
+    pip install zhipuai==2.1.5.20250726
+    ```
+
+    **验证安装**
+
+    ```python  theme={null}
+    import zhipuai
+    print(zhipuai.__version__)
+    ```
+
+    **使用示例**
+
+    ```python  theme={null}
+    from zhipuai import ZhipuAI
+
+    client = ZhipuAI(api_key="YOUR_API_KEY")
+    response = client.chat.completions.create(
+        model="glm-4.7",
+        messages=[
+            {
+                "role": "system",
+                "content": "你是一个有用的AI助手。"
+            },
+            {
+                "role": "user",
+                "content": "你好，请介绍一下自己。"
+            }
+        ]
+    )
+    print(response.choices[0].message.content)
+    ```
+  </Tab>
+</Tabs>

@@ -1,0 +1,113 @@
+# ScholarAI .gitignore
+
+# ===========================================
+# Python
+# ===========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ===========================================
+# Environment Variables
+# ===========================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# ===========================================
+# IDE
+# ===========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ===========================================
+# Logs
+# ===========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ===========================================
+# Node / Frontend
+# ===========================================
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+.nyc_output/
+
+# ===========================================
+# Testing
+# ===========================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+.cache
+*.cover
+coverage.xml
+*.mo
+*.spec.js.snap
+
+# ===========================================
+# Database
+# ===========================================
+*.db
+*.sqlite
+*.sqlite3
+data/db/
+
+# ===========================================
+# OS
+# ===========================================
+Thumbs.db
+.DS_Store
+*.bak
+*.tmp
+
+# ===========================================
+# Temporary Files
+# ===========================================
+*.tmp
+*.temp
+tmp/
+temp/

@@ -965,8 +965,8 @@ async def outline():
         }), 500
 
 
-# 注册到app的函数
-def register_ai_routes(app):
-    """注册AI路由到Flask应用"""
-    app.register_blueprint(ai_bp)
-    logger.info("AI路由已注册")
+# 注册到app的函数 (已禁用 - blueprint在__init__.py中注册)
+# def register_ai_routes(app):
+#     """注册AI路由到Flask应用"""
+#     app.register_blueprint(ai_bp)
+#     logger.info("AI路由已注册")

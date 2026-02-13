@@ -34,7 +34,11 @@
   },
   "api_credentials": {
     "zhipu_api_key": "1c27785e91624438af006527c35bdc07.2Xmz8XG6ZM9n3MXn",
-    "zhipu_free_models": ["glm-4-flash", "glm-4-flashx", "glm-4-air"],
+    "zhipu_free_models": [
+      "glm-4-flash",
+      "glm-4-flashx",
+      "glm-4-air"
+    ],
     "arxiv_paper_reader": "https://arxiv.org/abs/2301.00001v1"
   },
   "mongodb_connection": {
@@ -118,7 +122,9 @@
         "JWT_SECRET_KEY": "your-secret-key-change-in-production",
         "JWT_ACCESS_TOKEN_EXPIRES": "3600"
       },
-      "dependencies": ["task-002"]
+      "dependencies": [
+        "task-002"
+      ]
     },
     {
       "id": "task-004",
@@ -138,7 +144,9 @@
         "D:/ai/fullstack-merged/backend/models/__init__.py",
         "D:/ai/fullstack-merged/backend/models/user.py"
       ],
-      "dependencies": ["task-003"]
+      "dependencies": [
+        "task-003"
+      ]
     },
     {
       "id": "task-005",
@@ -164,7 +172,9 @@
         "backend/middleware/auth.py",
         "backend/test_auth_middleware.py"
       ],
-      "dependencies": ["task-004"]
+      "dependencies": [
+        "task-004"
+      ]
     },
     {
       "id": "task-006",
@@ -200,7 +210,9 @@
         "D:/ai/fullstack-merged/backend/routes/__init__.py",
         "D:/ai/fullstack-merged/backend/routes/auth.py"
       ],
-      "dependencies": ["task-005"]
+      "dependencies": [
+        "task-005"
+      ]
     },
     {
       "id": "task-007",
@@ -242,7 +254,9 @@
         "async get_paper_details(paper_id)  # 获取论文详情",
         "async get_paper_pdf_url(paper_id)  # 获取PDF下载链接"
       ],
-      "dependencies": ["task-003"]
+      "dependencies": [
+        "task-003"
+      ]
     },
     {
       "id": "task-007-1",
@@ -271,7 +285,11 @@
       },
       "zhipu_ai_integration": {
         "purpose": "使用智谱AI免费模型进行论文深度分析",
-        "available_models": ["glm-4-flash", "glm-4-flashx", "glm-4-air"],
+        "available_models": [
+          "glm-4-flash",
+          "glm-4-flashx",
+          "glm-4-air"
+        ],
         "api_key_note": "已配置用户提供的智谱API Key，可使用免费模型进行测试"
       },
       "files_to_create": [
@@ -285,7 +303,10 @@
         "async estimate_reading_time(paper_content)  # 估计阅读时间",
         "async assess_difficulty_level(paper_content)  # 评估难度等级"
       ],
-      "dependencies": ["task-007", "task-009"]
+      "dependencies": [
+        "task-007",
+        "task-009"
+      ]
     },
     {
       "id": "task-008",
@@ -326,7 +347,10 @@
       "files_to_create": [
         "D:/ai/fullstack-merged/backend/routes/papers_ai.py"
       ],
-      "dependencies": ["task-007", "task-009"]
+      "dependencies": [
+        "task-007",
+        "task-009"
+      ]
     },
     {
       "id": "task-009",
@@ -368,7 +392,9 @@
         "连接测试: 提供test_connection()方法验证API可用性",
         "免费模型支持: glm-4-flash, glm-4-flashx, glm-4-air"
       ],
-      "dependencies": ["task-002"]
+      "dependencies": [
+        "task-002"
+      ]
     },
     {
       "id": "task-010",
@@ -402,7 +428,9 @@
         "backend/routes/ai.py",
         "backend/test_ai_summary.py"
       ],
-      "dependencies": ["task-009"]
+      "dependencies": [
+        "task-009"
+      ]
     },
     {
       "id": "task-011",
@@ -446,7 +474,9 @@
         "JWT认证保护：所有端点需要登录",
         "智谱AI集成：使用glm-4-flash等免费模型"
       ],
-      "dependencies": ["task-009"]
+      "dependencies": [
+        "task-009"
+      ]
     },
     {
       "id": "task-012",
@@ -477,7 +507,9 @@
         "公开设置：��持项目公开/私有",
         "笔记功能：支持为论文添加笔记"
       ],
-      "dependencies": ["task-004"]
+      "dependencies": [
+        "task-004"
+      ]
     },
     {
       "id": "task-013",
@@ -535,7 +567,9 @@
         "进度统计：自动计算项目完成率和论文数量",
         "完整测试：包含11个测试场景"
       ],
-      "dependencies": ["task-012"]
+      "dependencies": [
+        "task-012"
+      ]
     },
     {
       "id": "task-014",
@@ -610,7 +644,10 @@
         "自动填充：添加收藏时自动从arXiv获取论文标题和作者",
         "MongoDB索引：创建复合唯一索引防止重复收藏"
       ],
-      "dependencies": ["task-004", "task-007"]
+      "dependencies": [
+        "task-004",
+        "task-007"
+      ]
     },
     {
       "id": "task-015",
@@ -663,7 +700,9 @@
         "JWT认证保护：所有端点需要用户登录",
         "完整测试：包含9个测试场景"
       ],
-      "dependencies": ["task-004"]
+      "dependencies": [
+        "task-004"
+      ]
     },
     {
       "id": "task-016",
@@ -692,7 +731,11 @@
         "D:/ai/fullstack-merged/frontend/src/app/pages/HomePage.tsx",
         "D:/ai/fullstack-merged/frontend/src/app/components/search/SearchResults.tsx"
       ],
-      "dependencies": ["task-006", "task-007", "task-010"]
+      "dependencies": [
+        "task-006",
+        "task-007",
+        "task-010"
+      ]
     },
     {
       "id": "task-017",
@@ -756,7 +799,9 @@
         "查看 htmlcov/index.html 获取详细覆盖率报告",
         "根据覆盖率报告补充测试用例，确保≥80%"
       ],
-      "dependencies": ["task-015"]
+      "dependencies": [
+        "task-015"
+      ]
     },
     {
       "id": "task-018",
@@ -790,7 +835,10 @@
         "D:/ai/fullstack-merged/e2e/tests/ai-chat.spec.ts",
         "D:/ai/fullstack-merged/deployment/.env.production"
       ],
-      "dependencies": ["task-016", "task-017"]
+      "dependencies": [
+        "task-016",
+        "task-017"
+      ]
     },
     {
       "id": "task-019",
@@ -798,7 +846,7 @@
       "priority": 1,
       "title": "创建前端API服务层基础架构",
       "description": "创建前端统一的API服务层架构，包括HTTP客户端封装、请求拦截器、错误处理、token管理和API配置。",
-      "status": "pending",
+      "status": "in_progress",
       "verification_steps": [
         "创建 frontend/src/app/services/apiClient.ts - HTTP客户端基础类",
         "实现请求拦截器 - 自动添加JWT token到Authorization头",
@@ -820,7 +868,8 @@
         "API超时和重试配置",
         "请求取消支持（AbortController）"
       ],
-      "dependencies": []
+      "dependencies": [],
+      "session_id": "session-2026-02-13-001"
     },
     {
       "id": "task-020",
@@ -861,7 +910,9 @@
         "用户信息缓存",
         "登录/注册表单验证"
       ],
-      "dependencies": ["task-019"]
+      "dependencies": [
+        "task-019"
+      ]
     },
     {
       "id": "task-021",
@@ -898,7 +949,10 @@
         "空状态处理",
         "加载状态指示器"
       ],
-      "dependencies": ["task-019", "task-007"]
+      "dependencies": [
+        "task-019",
+        "task-007"
+      ]
     },
     {
       "id": "task-022",
@@ -931,7 +985,10 @@
         "引用和版本信息",
         "相关论文推荐"
       ],
-      "dependencies": ["task-021", "task-007-1"]
+      "dependencies": [
+        "task-021",
+        "task-007-1"
+      ]
     },
     {
       "id": "task-023",
@@ -970,7 +1027,10 @@
         "思维导图可视化",
         "上下文关联（特定论文）"
       ],
-      "dependencies": ["task-019", "task-011"]
+      "dependencies": [
+        "task-019",
+        "task-011"
+      ]
     },
     {
       "id": "task-024",
@@ -1007,7 +1067,10 @@
         "自定义模型选择",
         "生成结果缓存"
       ],
-      "dependencies": ["task-023", "task-010"]
+      "dependencies": [
+        "task-023",
+        "task-010"
+      ]
     },
     {
       "id": "task-025",
@@ -1051,7 +1114,10 @@
         "颜色标识管理",
         "标签系统"
       ],
-      "dependencies": ["task-019", "task-013"]
+      "dependencies": [
+        "task-019",
+        "task-013"
+      ]
     },
     {
       "id": "task-026",
@@ -1096,7 +1162,10 @@
         "标签管理",
         "收藏搜索和过滤"
       ],
-      "dependencies": ["task-019", "task-014"]
+      "dependencies": [
+        "task-019",
+        "task-014"
+      ]
     },
     {
       "id": "task-027",
@@ -1136,7 +1205,10 @@
         "使用统计展示",
         "邮箱订阅管理"
       ],
-      "dependencies": ["task-019", "task-015"]
+      "dependencies": [
+        "task-019",
+        "task-015"
+      ]
     },
     {
       "id": "task-028",
@@ -1172,7 +1244,10 @@
         "上传取消",
         "错误重试"
       ],
-      "dependencies": ["task-019", "task-009"]
+      "dependencies": [
+        "task-019",
+        "task-009"
+      ]
     },
     {
       "id": "task-029",
@@ -1200,7 +1275,9 @@
         "自动跳转",
         "记住密码"
       ],
-      "dependencies": ["task-020"]
+      "dependencies": [
+        "task-020"
+      ]
     },
     {
       "id": "task-030",
@@ -1230,7 +1307,9 @@
         "空状态提示",
         "加载状态"
       ],
-      "dependencies": ["task-021"]
+      "dependencies": [
+        "task-021"
+      ]
     },
     {
       "id": "task-031",
@@ -1261,7 +1340,9 @@
         "思维导图",
         "上下文关联"
       ],
-      "dependencies": ["task-023"]
+      "dependencies": [
+        "task-023"
+      ]
     },
     {
       "id": "task-032",
@@ -1290,7 +1371,10 @@
         "收藏功能",
         "添加到项目"
       ],
-      "dependencies": ["task-022", "task-024"]
+      "dependencies": [
+        "task-022",
+        "task-024"
+      ]
     },
     {
       "id": "task-033",
@@ -1322,7 +1406,9 @@
         "颜色标识",
         "标签系统"
       ],
-      "dependencies": ["task-025"]
+      "dependencies": [
+        "task-025"
+      ]
     },
     {
       "id": "task-034",
@@ -1355,7 +1441,9 @@
         "错误日志记录",
         "自动错误上报（可选）"
       ],
-      "dependencies": ["task-019"]
+      "dependencies": [
+        "task-019"
+      ]
     },
     {
       "id": "task-035",
@@ -1389,7 +1477,13 @@
         "UI交互测试",
         "测试报告和截图"
       ],
-      "dependencies": ["task-029", "task-030", "task-031", "task-032", "task-033"]
+      "dependencies": [
+        "task-029",
+        "task-030",
+        "task-031",
+        "task-032",
+        "task-033"
+      ]
     },
     {
       "id": "task-036",
@@ -1421,7 +1515,9 @@
         "性能监控",
         "Service Worker"
       ],
-      "dependencies": ["task-034"]
+      "dependencies": [
+        "task-034"
+      ]
     },
     {
       "id": "task-037",
@@ -1457,7 +1553,9 @@
         "环境变量管理",
         "部署脚本"
       ],
-      "dependencies": ["task-036"]
+      "dependencies": [
+        "task-036"
+      ]
     },
     {
       "id": "task-038",
@@ -1499,7 +1597,9 @@
         "架构图",
         "故障排查"
       ],
-      "dependencies": ["task-037"]
+      "dependencies": [
+        "task-037"
+      ]
     }
   ]
 }

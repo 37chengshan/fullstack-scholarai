@@ -6,7 +6,7 @@ ScholarAI - 用户数据模型
 
 from datetime import datetime
 from typing import Optional, Dict, Any
-from werkzeug.security import generate_password_hash, check_password
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
 
@@ -127,7 +127,7 @@ class User:
         返回:
             bool: 密码是否正确
         """
-        return check_password(self.password_hash, password)
+        return check_password_hash(self.password_hash, password)
 
     def update_stats(self, **kwargs) -> None:
         """

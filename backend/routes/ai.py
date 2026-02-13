@@ -1,0 +1,972 @@
+"""
+AI聊天与思维导图API路由
+实现AI问答、流式聊天和思维导图生成功能
+"""
+
+import json
+import logging
+from flask import Blueprint, request, jsonify, Response, stream_with_context
+from functools import wraps
+from typing import Dict, List, Optional
+
+from services.zhipu_client import get_zhipu_client
+from services.arxiv_client import get_arxiv_client
+from middleware.auth import jwt_required_custom, get_current_user_id
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Create blueprint
+ai_bp = Blueprint('ai', __name__, url_prefix='/api/ai')
+
+
+def validate_api_config(f):
+    """
+    验证API配置的装饰器
+
+    支持两种方式提供API密钥：
+    1. 请求头中的 Authorization: Bearer <api_key>
+    2. 请求体中的 api_config.api_key
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_config = request.get_json().get('api_config', {}) if request.is_json else {}
+
+        # 优先使用请求体中的API密钥
+        api_key = api_config.get('api_key')
+
+        # 如果没有提供，使用默认的客户端
+        if api_key:
+            try:
+                client = ZhipuClient(api_key=api_key)
+                request.ai_client = client
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'API配置无效: {str(e)}'
+                }), 400
+        else:
+            request.ai_client = get_zhipu_client()
+
+        request.api_config = api_config
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+@ai_bp.route('/chat', methods=['POST'])
+@jwt_required_custom
+async def chat():
+    """
+    AI问答（非流式）
+
+    Request:
+        {
+            "question": "什么是Transformer?",
+            "paper_id": "2301.00001",  // 可选，关联特定论文
+            "chat_history": [  // 可选，对话历史
+                {"role": "user", "content": "..."},
+                {"role": "assistant", "content": "..."}
+            ],
+            "api_config": {
+                "model": "glm-4-flash",  // 可选，默认模型
+                "temperature": 0.7,       // 可选
+                "max_tokens": 2000         // 可选
+            }
+        }
+
+    Response:
+        {
+            "success": true,
+            "data": {
+                "answer": "Transformer是一种...",
+                "model": "glm-4-flash",
+                "usage": {
+                    "prompt_tokens": 100,
+                    "completion_tokens": 500,
+                    "total_tokens": 600
+                }
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        question = data.get('question', '').strip()
+        paper_id = data.get('paper_id')
+        chat_history = data.get('chat_history', [])
+        api_config = data.get('api_config', {})
+
+        # 验证问题
+        if not question:
+            return jsonify({
+                'success': False,
+                'error': '问题不能为空'
+            }), 400
+
+        # 获取API客户端
+        api_key = api_config.get('api_key')
+        if api_key:
+            from services.zhipu_client import ZhipuClient
+            client = ZhipuClient(api_key=api_key)
+        else:
+            client = get_zhipu_client()
+
+        # 构建消息历史
+        messages = []
+
+        # 添加系统提示
+        system_prompt = "你是一个专业的学术论文助手，擅长解释复杂的学术概念和研究成果。"
+        messages.append({"role": "system", "content": system_prompt})
+
+        # 添加论文上下文（如果提供）
+        if paper_id:
+            try:
+                arxiv_client = get_arxiv_client()
+                paper_data = await arxiv_client.fetch_paper_metadata(paper_id)
+
+                context = f"""
+                论文标题: {paper_data.get('title', 'N/A')}
+                作者: {', '.join(paper_data.get('authors', []))}
+                摘要: {paper_data.get('abstract', 'N/A')}
+
+                请基于以上论文内容回答用户的问题。
+                """
+                messages.append({"role": "system", "content": context})
+
+                logger.info(f"关联论文: {paper_id}")
+            except Exception as e:
+                logger.warning(f"获取论文信息失败: {e}")
+
+        # 添加对话历史
+        if chat_history:
+            # 限制历史长度，避免token超限
+            history_limit = 10
+            messages.extend(chat_history[-history_limit:])
+            logger.info(f"添加对话历史，{len(chat_history)}条消息")
+
+        # 添加当前问题
+        messages.append({"role": "user", "content": question})
+
+        # 获取模型参数
+        model = api_config.get('model', 'glm-4-flash')
+        temperature = api_config.get('temperature', 0.7)
+        max_tokens = api_config.get('max_tokens', 2000)
+
+        # 调用AI
+        logger.info(f"发送AI聊天请求，模型: {model}")
+        result = await client.chat_completion(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=False
+        )
+
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'AI请求失败')
+            }), 500
+
+        # 提取回答
+        response_data = result.get('data', {})
+        choices = response_data.get('choices', [])
+
+        if not choices:
+            return jsonify({
+                'success': False,
+                'error': 'AI未返回有效响应'
+            }), 500
+
+        answer = choices[0].get('message', {}).get('content', '')
+        usage = response_data.get('usage', {})
+
+        logger.info(f"AI聊天成功，生成 {usage.get('completion_tokens', 0)} tokens")
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'answer': answer,
+                'model': response_data.get('model', model),
+                'usage': {
+                    'prompt_tokens': usage.get('prompt_tokens', 0),
+                    'completion_tokens': usage.get('completion_tokens', 0),
+                    'total_tokens': usage.get('total_tokens', 0)
+                }
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"AI聊天错误: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生错误: {str(e)}'
+        }), 500
+
+
+@ai_bp.route('/chat/stream', methods=['POST'])
+@jwt_required_custom
+def chat_stream():
+    """
+    AI问答（流式SSE）
+
+    Request: 同 /api/ai/chat
+
+    Response: text/event-stream (SSE流式输出)
+        data: {"content": "Trans"}
+        data: {"content": "former"}
+        data: {"content": " is..."}
+        data: [DONE]
+    """
+    try:
+        data = request.get_json()
+        question = data.get('question', '').strip()
+        paper_id = data.get('paper_id')
+        chat_history = data.get('chat_history', [])
+        api_config = data.get('api_config', {})
+
+        # 验证问题
+        if not question:
+            return jsonify({
+                'success': False,
+                'error': '问题不能为空'
+            }), 400
+
+        # 获取API客户端
+        api_key = api_config.get('api_key')
+        if api_key:
+            from services.zhipu_client import ZhipuClient
+            client = ZhipuClient(api_key=api_key)
+        else:
+            client = get_zhipu_client()
+
+        # 构建消息历史
+        messages = []
+
+        # 添加系统提示
+        system_prompt = "你是一个专业的学术论文助手，擅长解释复杂的学术概念和研究成果。"
+        messages.append({"role": "system", "content": system_prompt})
+
+        # 添加论文上下文（如果提供）
+        async def add_paper_context():
+            if paper_id:
+                try:
+                    arxiv_client = get_arxiv_client()
+                    paper_data = await arxiv_client.fetch_paper_metadata(paper_id)
+
+                    context = f"""
+                    论文标题: {paper_data.get('title', 'N/A')}
+                    作者: {', '.join(paper_data.get('authors', []))}
+                    摘要: {paper_data.get('abstract', 'N/A')}
+
+                    请基于以上论文内容回答用户的问题。
+                    """
+                    messages.append({"role": "system", "content": context})
+                    logger.info(f"关联论文: {paper_id}")
+                except Exception as e:
+                    logger.warning(f"获取论文信息失败: {e}")
+
+        # 需要异步运行
+        import asyncio
+        asyncio.run(add_paper_context())
+
+        # 添加对话历史
+        if chat_history:
+            history_limit = 10
+            messages.extend(chat_history[-history_limit:])
+            logger.info(f"添加对话历史，{len(chat_history)}条消息")
+
+        # 添加当前问题
+        messages.append({"role": "user", "content": question})
+
+        # 获取模型参数
+        model = api_config.get('model', 'glm-4-flash')
+        temperature = api_config.get('temperature', 0.7)
+        max_tokens = api_config.get('max_tokens', 2000)
+
+        logger.info(f"发送流式AI聊天请求，模型: {model}")
+
+        def generate():
+            """生成SSE流"""
+            try:
+                # 使用流式API
+                stream = client.chat_completion_stream(
+                    messages=messages,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+
+                # 这里需要处理async generator
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+                async def stream_content():
+                    async for chunk in stream:
+                        # 格式化为SSE
+                        sse_data = json.dumps({"content": chunk}, ensure_ascii=False)
+                        yield f"data: {sse_data}\n\n"
+
+                    # 发送结束标记
+                    yield "data: [DONE]\n\n"
+
+                # 运行异步生成器
+                gen = loop.run_until_complete(stream_content())
+                for item in gen:
+                    yield item
+
+            except Exception as e:
+                logger.error(f"流式生成错误: {e}")
+                error_data = json.dumps({"error": str(e)}, ensure_ascii=False)
+                yield f"data: {error_data}\n\n"
+                yield "data: [DONE]\n\n"
+
+        return Response(
+            stream_with_context(generate()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"流式聊天初始化错误: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生错误: {str(e)}'
+        }), 500
+
+
+@ai_bp.route('/mindmap', methods=['POST'])
+@jwt_required_custom
+async def mindmap():
+    """
+    生成思维导图
+
+    Request:
+        {
+            "paper_id": "2301.00001",  // 可选，基于论文生成
+            "paper_data": {  // 可选，直接提供论文数据
+                "title": "...",
+                "abstract": "...",
+                "authors": [...]
+            },
+            "topic": "深度学习",  // 可选，自定义主题
+            "api_config": {
+                "model": "glm-4-flash"
+            }
+        }
+
+    Response:
+        {
+            "success": true,
+            "data": {
+                "mindmap": {
+                    "id": "root",
+                    "label": "Transformer架构",
+                    "children": [
+                        {
+                            "id": "1",
+                            "label": "自注意力机制",
+                            "children": [...]
+                        }
+                    ]
+                },
+                "format": "hierarchy"
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        paper_id = data.get('paper_id')
+        paper_data = data.get('paper_data')
+        topic = data.get('topic')
+        api_config = data.get('api_config', {})
+
+        # 获取API客户端
+        api_key = api_config.get('api_key')
+        if api_key:
+            from services.zhipu_client import ZhipuClient
+            client = ZhipuClient(api_key=api_key)
+        else:
+            client = get_zhipu_client()
+
+        # 构建提示词
+        prompt = """你是一个专业的思维导图生成助手。请根据提供的论文或主题生成一个结构化的思维导图。
+
+要求：
+1. 思维导图应包含3-5个主要分支
+2. 每个分支可以有2-4个子分支
+3. 使用层次化的JSON格式返回
+4. 节点标签应简洁明了，使用短语而非长句
+5. 体现论文的核心思想、方法论和主要贡献
+
+返回格式（JSON）：
+{
+  "id": "root",
+  "label": "中心主题",
+  "children": [
+    {
+      "id": "1",
+      "label": "主要分支1",
+      "children": [
+        {"id": "1-1", "label": "子节点1"},
+        {"id": "1-2", "label": "子节点2"}
+      ]
+    }
+  ]
+}
+
+请只返回JSON，不要包含其他文字说明。"""
+
+        # 构建消息
+        messages = [{"role": "system", "content": prompt}]
+
+        # 添加论文或主题内容
+        if paper_id:
+            try:
+                arxiv_client = get_arxiv_client()
+                paper = await arxiv_client.fetch_paper_metadata(paper_id)
+
+                content = f"""
+请为以下论文生成思维导图：
+
+标题: {paper.get('title', 'N/A')}
+作者: {', '.join(paper.get('authors', []))}
+摘要: {paper.get('abstract', 'N/A')}
+分类: {', '.join(paper.get('categories', []))}
+发表时间: {paper.get('published', 'N/A')}
+"""
+                messages.append({"role": "user", "content": content})
+                logger.info(f"生成论文思维导图: {paper_id}")
+
+            except Exception as e:
+                logger.error(f"获取论文信息失败: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f'获取论文信息失败: {str(e)}'
+                }), 404
+
+        elif paper_data:
+            # 使用提供的论文数据
+            content = f"""
+请为以下论文生成思维导图：
+
+标题: {paper_data.get('title', 'N/A')}
+摘要: {paper_data.get('abstract', 'N/A')}
+"""
+            messages.append({"role": "user", "content": content})
+            logger.info("生成思维导图（使用提供的数据）")
+
+        elif topic:
+            # 使用自定义主题
+            messages.append({"role": "user", "content": f"请为主题「{topic}」生成思维导图"})
+            logger.info(f"生成主题思维导图: {topic}")
+        else:
+            return jsonify({
+                'success': False,
+                'error': '必须提供paper_id、paper_data或topic中的至少一个'
+            }), 400
+
+        # 获取模型参数
+        model = api_config.get('model', 'glm-4-flash')
+
+        # 调用AI
+        result = await client.chat_completion(
+            messages=messages,
+            model=model,
+            temperature=0.6,  # 较低温度以获得更结构化的输出
+            max_tokens=2000
+        )
+
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'AI请求失败')
+            }), 500
+
+        # 提取回答
+        response_data = result.get('data', {})
+        choices = response_data.get('choices', [])
+
+        if not choices:
+            return jsonify({
+                'success': False,
+                'error': 'AI未返回有效响应'
+            }), 500
+
+        answer = choices[0].get('message', {}).get('content', '')
+
+        # 解析JSON（可能包含markdown代码块）
+        try:
+            # 移除可能的markdown代码块标记
+            answer = answer.strip()
+            if answer.startswith('```json'):
+                answer = answer[7:]
+            if answer.startswith('```'):
+                answer = answer[3:]
+            if answer.endswith('```'):
+                answer = answer[:-3]
+            answer = answer.strip()
+
+            mindmap_data = json.loads(answer)
+
+            logger.info("思维导图生成成功")
+
+            return jsonify({
+                'success': True,
+                'data': {
+                    'mindmap': mindmap_data,
+                    'format': 'hierarchy'
+                }
+            })
+
+        except json.JSONDecodeError as e:
+            logger.error(f"解析思维导图JSON失败: {e}")
+            logger.error(f"原始回答: {answer}")
+
+            return jsonify({
+                'success': False,
+                'error': 'AI返回的思维导图格式无效',
+                'raw_response': answer
+            }), 500
+
+    except Exception as e:
+        logger.error(f"思维导图生成错误: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生错误: {str(e)}'
+        }), 500
+
+
+@ai_bp.route('/summary', methods=['POST'])
+@jwt_required_custom
+async def summary():
+    """
+    生成论文摘要
+
+    Request:
+        {
+            "paper_id": "2301.00001",  // 可选，基于论文ID
+            "paper_data": {  // 可选，直接提供论文数据
+                "title": "...",
+                "abstract": "...",
+                "authors": [...],
+                "categories": [...]
+            },
+            "length": "medium",  // 可选，摘要长度：short/medium/long
+            "api_config": {
+                "model": "glm-4-flash"
+            }
+        }
+
+    Response:
+        {
+            "success": true,
+            "data": {
+                "summary": "本文提出了一种新的深度学习方法...",
+                "key_points": [
+                    "点1：创新性方法",
+                    "点2：实验结果",
+                    "点3：应用场景"
+                ],
+                "paper_id": "2301.00001",
+                "model": "glm-4-flash"
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        paper_id = data.get('paper_id')
+        paper_data = data.get('paper_data')
+        length = data.get('length', 'medium')
+        api_config = data.get('api_config', {})
+
+        # 获取API客户端
+        api_key = api_config.get('api_key')
+        if api_key:
+            from services.zhipu_client import ZhipuClient
+            client = ZhipuClient(api_key=api_key)
+        else:
+            client = get_zhipu_client()
+
+        # 根据length参数确定摘要长度
+        length_instructions = {
+            'short': '2-3句话，约100字',
+            'medium': '5-7句话，约200-300字',
+            'long': '8-10句话，约400-500字'
+        }
+        length_guide = length_instructions.get(length, length_instructions['medium'])
+
+        # 构建提示词
+        prompt = f"""你是一个专业的学术论文摘要生成助手。请为论文生成一个{length_guide}的摘要。
+
+要求：
+1. 摘要应包含研究背景、核心方法、主要结果和贡献
+2. 使用学术化语言，避免口语化表达
+3. 突出论文的创新点和实用价值
+4. 提取3-5个关键要点（bullet points）
+5. 摘要应该是独立完整的，不依赖原文即可理解
+
+请按以下JSON格式返回：
+{{
+  "summary": "这里是摘要正文...",
+  "key_points": [
+    "关键要点1",
+    "关键要点2",
+    "关键要点3"
+  ]
+}}
+
+请只返回JSON，不要包含其他文字说明。"""
+
+        # 构建消息
+        messages = [{"role": "system", "content": prompt}]
+
+        # 添加论文内容
+        if paper_id:
+            try:
+                arxiv_client = get_arxiv_client()
+                paper = await arxiv_client.fetch_paper_metadata(paper_id)
+
+                content = f"""
+请为以下论文生成摘要：
+
+标题: {paper.get('title', 'N/A')}
+作者: {', '.join(paper.get('authors', []))}
+摘要: {paper.get('abstract', 'N/A')}
+分类: {', '.join(paper.get('categories', []))}
+发表时间: {paper.get('published', 'N/A')}
+"""
+                messages.append({"role": "user", "content": content})
+                logger.info(f"生成论文摘要: {paper_id}")
+
+            except Exception as e:
+                logger.error(f"获取论文信息失败: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f'获取论文信息失败: {str(e)}'
+                }), 404
+
+        elif paper_data:
+            content = f"""
+请为以下论文生成摘要：
+
+标题: {paper_data.get('title', 'N/A')}
+摘要: {paper_data.get('abstract', 'N/A')}
+分类: {', '.join(paper_data.get('categories', []))}
+"""
+            messages.append({"role": "user", "content": content})
+            logger.info("生成摘要（使用提供的数据）")
+        else:
+            return jsonify({
+                'success': False,
+                'error': '必须提供paper_id或paper_data'
+            }), 400
+
+        # 获取模型参数
+        model = api_config.get('model', 'glm-4-flash')
+
+        # 调用AI
+        result = await client.chat_completion(
+            messages=messages,
+            model=model,
+            temperature=0.5,  # 较低温度以获得更准确的摘要
+            max_tokens=1500
+        )
+
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'AI请求失败')
+            }), 500
+
+        # 提取回答
+        response_data = result.get('data', {})
+        choices = response_data.get('choices', [])
+
+        if not choices:
+            return jsonify({
+                'success': False,
+                'error': 'AI未返回有效响应'
+            }), 500
+
+        answer = choices[0].get('message', {}).get('content', '')
+
+        # 解析JSON
+        try:
+            # 移除可能的markdown代码块标记
+            answer = answer.strip()
+            if answer.startswith('```json'):
+                answer = answer[7:]
+            if answer.startswith('```'):
+                answer = answer[3:]
+            if answer.endswith('```'):
+                answer = answer[:-3]
+            answer = answer.strip()
+
+            summary_data = json.loads(answer)
+
+            logger.info("论文摘要生成成功")
+
+            return jsonify({
+                'success': True,
+                'data': {
+                    'summary': summary_data.get('summary', ''),
+                    'key_points': summary_data.get('key_points', []),
+                    'paper_id': paper_id,
+                    'length': length,
+                    'model': response_data.get('model', model)
+                }
+            })
+
+        except json.JSONDecodeError as e:
+            logger.error(f"解析摘要JSON失败: {e}")
+            logger.error(f"原始回答: {answer}")
+
+            return jsonify({
+                'success': False,
+                'error': 'AI返回的摘要格式无效',
+                'raw_response': answer
+            }), 500
+
+    except Exception as e:
+        logger.error(f"摘要生成错误: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生错误: {str(e)}'
+        }), 500
+
+
+@ai_bp.route('/outline', methods=['POST'])
+@jwt_required_custom
+async def outline():
+    """
+    生成研究大纲
+
+    Request:
+        {
+            "paper_id": "2301.00001",  // 可选，基于论文ID
+            "paper_data": {  // 可选，直接提供论文数据
+                "title": "...",
+                "abstract": "...",
+                "authors": [...]
+            },
+            "detail_level": "standard",  // 可选，详细程度：brief/standard/detailed
+            "api_config": {
+                "model": "glm-4-flash"
+            }
+        }
+
+    Response:
+        {
+            "success": true,
+            "data": {
+                "outline": {
+                    "title": "论文标题",
+                    "sections": [
+                        {
+                            "section": "1. 引言",
+                            "subsections": [
+                                "1.1 研究背景",
+                                "1.2 研究动机",
+                                "1.3 主要贡献"
+                            ]
+                        },
+                        {
+                            "section": "2. 相关工作",
+                            "subsections": [
+                                "2.1 传统方法",
+                                "2.2 深度学习进展",
+                                "2.3 本文方法定位"
+                            ]
+                        }
+                    ]
+                },
+                "paper_id": "2301.00001",
+                "detail_level": "standard"
+            }
+        }
+    """
+    try:
+        data = request.get_json()
+        paper_id = data.get('paper_id')
+        paper_data = data.get('paper_data')
+        detail_level = data.get('detail_level', 'standard')
+        api_config = data.get('api_config', {})
+
+        # 获取API客户端
+        api_key = api_config.get('api_key')
+        if api_key:
+            from services.zhipu_client import ZhipuClient
+            client = ZhipuClient(api_key=api_key)
+        else:
+            client = get_zhipu_client()
+
+        # 根据detail_level确定详细程度
+        detail_instructions = {
+            'brief': '3-4个主要部分，每个部分1-2个子部分',
+            'standard': '5-7个主要部分，每个部分2-3个子部分',
+            'detailed': '7-10个主要部分，每个部分3-4个子部分'
+        }
+        detail_guide = detail_instructions.get(detail_level, detail_instructions['standard'])
+
+        # 构建提示词
+        prompt = f"""你是一个专业的学术研究大纲生成助手。请为论文生成一个{detail_guide}的研究大纲。
+
+要求：
+1. 大纲应遵循学术论文的标准结构：引言、相关工作、方法、实验、结果、讨论、结论
+2. 每个部分应逻辑清晰，层次分明
+3. 章节编号使用标准学术格式（1. 1.1 1.1.1）
+4. 内容应覆盖论文的核心研究内容和创新点
+5. 体现研究的完整性和系统性
+
+请按以下JSON格式返回：
+{{
+  "title": "论文标题",
+  "sections": [
+    {{
+      "section": "1. 引言",
+      "subsections": [
+        "1.1 研究背景",
+        "1.2 研究动机",
+        "1.3 主要贡献"
+      ]
+    }},
+    {{
+      "section": "2. 相关工作",
+      "subsections": [
+        "2.1 传统方法综述",
+        "2.2 深度学习方法",
+        "2.3 本文创新点"
+      ]
+    }}
+  ]
+}}
+
+请只返回JSON，不要包含其他文字说明。"""
+
+        # 构建消息
+        messages = [{"role": "system", "content": prompt}]
+
+        # 添加论文内容
+        if paper_id:
+            try:
+                arxiv_client = get_arxiv_client()
+                paper = await arxiv_client.fetch_paper_metadata(paper_id)
+
+                content = f"""
+请为以下论文生成研究大纲：
+
+标题: {paper.get('title', 'N/A')}
+作者: {', '.join(paper.get('authors', []))}
+摘要: {paper.get('abstract', 'N/A')}
+分类: {', '.join(paper.get('categories', []))}
+发表时间: {paper.get('published', 'N/A')}
+"""
+                messages.append({"role": "user", "content": content})
+                logger.info(f"生成论文大纲: {paper_id}")
+
+            except Exception as e:
+                logger.error(f"获取论文信息失败: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': f'获取论文信息失败: {str(e)}'
+                }), 404
+
+        elif paper_data:
+            content = f"""
+请为以下论文生成研究大纲：
+
+标题: {paper_data.get('title', 'N/A')}
+摘要: {paper_data.get('abstract', 'N/A')}
+"""
+            messages.append({"role": "user", "content": content})
+            logger.info("生成大纲（使用提供的数据）")
+        else:
+            return jsonify({
+                'success': False,
+                'error': '必须提供paper_id或paper_data'
+            }), 400
+
+        # 获取模型参数
+        model = api_config.get('model', 'glm-4-flash')
+
+        # 调用AI
+        result = await client.chat_completion(
+            messages=messages,
+            model=model,
+            temperature=0.6,  # 中等温度平衡创造性和准确性
+            max_tokens=2500
+        )
+
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'AI请求失败')
+            }), 500
+
+        # 提取回答
+        response_data = result.get('data', {})
+        choices = response_data.get('choices', [])
+
+        if not choices:
+            return jsonify({
+                'success': False,
+                'error': 'AI未返回有效响应'
+            }), 500
+
+        answer = choices[0].get('message', {}).get('content', '')
+
+        # 解析JSON
+        try:
+            # 移除可能的markdown代码块标记
+            answer = answer.strip()
+            if answer.startswith('```json'):
+                answer = answer[7:]
+            if answer.startswith('```'):
+                answer = answer[3:]
+            if answer.endswith('```'):
+                answer = answer[:-3]
+            answer = answer.strip()
+
+            outline_data = json.loads(answer)
+
+            logger.info("研究大纲生成成功")
+
+            return jsonify({
+                'success': True,
+                'data': {
+                    'outline': outline_data,
+                    'paper_id': paper_id,
+                    'detail_level': detail_level,
+                    'model': response_data.get('model', model)
+                }
+            })
+
+        except json.JSONDecodeError as e:
+            logger.error(f"解析大纲JSON失败: {e}")
+            logger.error(f"原始回答: {answer}")
+
+            return jsonify({
+                'success': False,
+                'error': 'AI返回的大纲格式无效',
+                'raw_response': answer
+            }), 500
+
+    except Exception as e:
+        logger.error(f"大纲生成错误: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生错误: {str(e)}'
+        }), 500
+
+
+# 注册到app的函数
+def register_ai_routes(app):
+    """注册AI路由到Flask应用"""
+    app.register_blueprint(ai_bp)
+    logger.info("AI路由已注册")

@@ -1047,7 +1047,9 @@
       "priority": 2,
       "title": "实现AI论文精读功能集成",
       "description": "实现前端AI论文精读服务，包括AI摘要生成、研究大纲生成、批量摘要。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-13T15:00:00Z",
+      "session_id": "session-2026-02-13-007",
       "verification_steps": [
         "创建 frontend/src/app/services/aiPaperApi.ts",
         "实现 generateSummary(paper_id, api_config) - 生成论文摘要",
@@ -1087,7 +1089,7 @@
       "priority": 2,
       "title": "实现项目管理API集成",
       "description": "实现前端项目管理服务，连接后端项目管理API，包括项目CRUD和论文管理。",
-      "status": "pending",
+      "status": "in_progress",
       "verification_steps": [
         "更新 frontend/src/app/services/projectsApi.ts - 使用真实API",
         "实现 getProjects(filters) - 获取用户所有项目",

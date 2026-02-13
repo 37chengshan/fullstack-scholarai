@@ -1,10 +1,10 @@
 """
 Papers API Routes
-实现论文搜索和论文详情API端点
+使用OpenAlex API实现论文搜索和详情查询（完全免费无限制）
 """
 
 from flask import Blueprint, request, jsonify
-from services.arxiv_client import get_arxiv_client
+from services.openalex_client import get_openalex_client
 import logging
 
 # 创建蓝图
@@ -15,16 +15,16 @@ logger = logging.getLogger(__name__)
 @papers_bp.route('/search', methods=['GET'])
 def search_papers():
     """
-    搜索arXiv论文
+    使用OpenAlex搜索论文
 
     Query Parameters:
         query: 搜索关键词 (必填)
-        field: 领域过滤 (可选, 如 cs.AI, cs.CL, cs.LG)
+        field: 领域过滤 (可选)
         year_min: 最小年份 (可选)
         year_max: 最大年份 (可选)
-        venue: 发表场所 (可选, 如 NeurIPS, ICML, CVPR)
+        venue: 发表场所 (可选)
         page: 页码 (可选, 默认1)
-        page_size: 每页数量 (可选, 默认10, 最大100)
+        page_size: 每页数量 (可选, 默认20, 最大200)
 
     Returns:
         JSON响应包含论文列表和分页信息
@@ -37,7 +37,7 @@ def search_papers():
         year_max = request.args.get('year_max', type=int) or None
         venue = request.args.get('venue', '').strip() or None
         page = request.args.get('page', 1, type=int)
-        page_size = request.args.get('page_size', 10, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
 
         # 验证必填参数
         if not query:
@@ -47,37 +47,27 @@ def search_papers():
             }), 400
 
         # 验证page_size范围
-        if page_size < 1 or page_size > 100:
-            return jsonify({
-                'success': False,
-                'error': 'page_size必须在1-100之间'
-            }), 400
+        if page_size < 1 or page_size > 200:
+            page_size = 20
 
-        # 验证page范围
-        if page < 1:
-            return jsonify({
-                'success': False,
-                'error': 'page必须大于0'
-            }), 400
+        # 获取OpenAlex客户端
+        client = get_openalex_client()
 
-        # 验证年份范围
-        if year_min and year_max and year_min > year_max:
-            return jsonify({
-                'success': False,
-                'error': 'year_min不能大于year_max'
-            }), 400
+        # 构建过滤条件
+        filter_fields = {}
+        if year_min:
+            filter_fields['from_publication_year'] = year_min
+        if year_max:
+            filter_fields['to_publication_year'] = year_max
+        if venue:
+            # OpenAlex使用venue filter
+            filter_fields['venue'] = venue
 
-        # 获取arXiv客户端
-        client = get_arxiv_client()
-
-        # 搜索论文
+        # 调用OpenAlex搜索
         import asyncio
         result = asyncio.run(client.search_papers(
             query=query,
-            field=field,
-            year_min=year_min,
-            year_max=year_max,
-            venue=venue,
+            filter_fields=filter_fields,
             page=page,
             page_size=page_size
         ))
@@ -101,10 +91,10 @@ def search_papers():
 @papers_bp.route('/<paper_id>', methods=['GET'])
 def get_paper_details(paper_id):
     """
-    获取论文详情
+    获取论文详情（使用OpenAlex）
 
     Path Parameters:
-        paper_id: arXiv论文ID (如 2301.00001)
+        paper_id: 论文ID (支持OpenAlex ID或arXiv ID)
 
     Returns:
         JSON响应包含论文详情
@@ -116,12 +106,22 @@ def get_paper_details(paper_id):
                 'error': '论文ID不能为空'
             }), 400
 
-        # 获取arXiv客户端
-        client = get_arxiv_client()
+        # 获取OpenAlex客户端
+        client = get_openalex_client()
 
         # 获取论文详情
         import asyncio
-        result = asyncio.run(client.get_paper_details(paper_id))
+
+        # 检测是否为arXiv ID格式 (YYMM.NNNNN)
+        import re
+        arxiv_pattern = r'^\d{4}\.\d{5}(v\d+)?$'
+
+        if bool(re.match(arxiv_pattern, paper_id)):
+            # 使用arXiv ID查找
+            result = asyncio.run(client.get_paper_by_arxiv_id(paper_id))
+        else:
+            # 使用OpenAlex ID查找
+            result = asyncio.run(client.get_paper_details(paper_id))
 
         if result['success']:
             return jsonify(result)
@@ -145,7 +145,7 @@ def get_paper_pdf(paper_id):
     获取论文PDF下载链接
 
     Path Parameters:
-        paper_id: arXiv论文ID (如 2301.00001)
+        paper_id: 论文ID
 
     Returns:
         JSON响应包含PDF URL
@@ -157,8 +157,8 @@ def get_paper_pdf(paper_id):
                 'error': '论文ID不能为空'
             }), 400
 
-        # 获取arXiv客户端
-        client = get_arxiv_client()
+        # 获取OpenAlex客户端
+        client = get_openalex_client()
 
         # 获取PDF URL
         import asyncio
@@ -170,10 +170,39 @@ def get_paper_pdf(paper_id):
             return jsonify({
                 'success': False,
                 'error': result.get('error', '获取PDF链接失败')
-            }), 500
+            }), 404
 
     except Exception as e:
         logger.error(f"获取PDF链接失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'服务器内部错误: {str(e)}'
+        }), 500
+
+
+@papers_bp.route('/fields', methods=['GET'])
+def get_fields():
+    """
+    获取研究领域列表（OpenAlex Concepts）
+
+    Returns:
+        JSON响应包含领域列表
+    """
+    try:
+        client = get_openalex_client()
+        import asyncio
+        result = asyncio.run(client.get_concepts(limit=50))
+
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', '获取领域列表失败')
+            }), 500
+
+    except Exception as e:
+        logger.error(f"获取领域列表失败: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'服务器内部错误: {str(e)}'

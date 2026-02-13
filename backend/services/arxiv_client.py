@@ -74,6 +74,25 @@ class ArxivClient:
         # URL编码空格为+
         return search_query.replace(' ', '+')
 
+    def _format_date(self, date_value) -> str:
+        """
+        格式化日期值为ISO字符串
+
+        Args:
+            date_value: 日期值（datetime或str）
+
+        Returns:
+            ISO格式的日期字符串，或None
+        """
+        if not date_value:
+            return None
+        if isinstance(date_value, str):
+            return date_value
+        try:
+            return date_value.isoformat()
+        except AttributeError:
+            return str(date_value)
+
     def _parse_paper(self, entry) -> Dict:
         """
         解析单篇论文信息
@@ -108,12 +127,27 @@ class ArxivClient:
         # 提取发表年份
         published_year = None
         if hasattr(entry, 'published'):
-            published_year = entry.published.year if entry.published else None
+            try:
+                published_year = entry.published.year if entry.published else None
+            except (AttributeError, TypeError):
+                # published可能是字符串，尝试解析
+                if isinstance(entry.published, str):
+                    year_match = re.search(r'\d{4}', entry.published)
+                    if year_match:
+                        published_year = int(year_match.group())
+        # 如果还没找到年份，尝试从ID中提取
+        if not published_year and arxiv_id:
+            id_match = re.match(r'(\d{4})\.\d+', arxiv_id)
+            if id_match:
+                published_year = int(id_match.group(1))
 
         # 提取更新时间
         updated = None
-        if hasattr(entry, 'updated'):
-            updated = entry.updated.isoformat() if entry.updated else None
+        if hasattr(entry, 'updated') and entry.updated:
+            if isinstance(entry.updated, str):
+                updated = entry.updated
+            else:
+                updated = entry.updated.isoformat()
 
         # 提取PDF链接
         pdf_url = ""
@@ -128,7 +162,7 @@ class ArxivClient:
             'title': entry.title if hasattr(entry, 'title') else "",
             'authors': authors,
             'summary': entry.summary if hasattr(entry, 'summary') else "",
-            'published': entry.published.isoformat() if hasattr(entry, 'published') and entry.published else None,
+            'published': self._format_date(entry.published) if hasattr(entry, 'published') else None,
             'published_year': published_year,
             'updated': updated,
             'categories': categories,

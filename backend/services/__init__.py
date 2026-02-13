@@ -2,19 +2,20 @@
 Services module initialization
 
 This module provides external service integrations including:
-- ArXiv paper reader
-- Zhipu AI client
+- ArXiv paper reader (for PDF processing)
+- OpenAlex paper search (primary, no rate limit, 250M+ papers)
+- Zhipu AI client (for AI features)
 """
 
 from .arxiv_reader import ArxivReader, analyze_paper
-from .arxiv_client import ArxivClient, get_arxiv_client
+from .openalex_client import OpenAlexClient, get_openalex_client
 from .zhipu_client import ZhipuClient, get_zhipu_client
 
 __all__ = [
     'ArxivReader',
     'analyze_paper',
-    'ArxivClient',
-    'get_arxiv_client',
+    'OpenAlexClient',
+    'get_openalex_client',
     'ZhipuClient',
     'get_zhipu_client'
 ]

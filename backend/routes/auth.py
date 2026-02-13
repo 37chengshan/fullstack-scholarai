@@ -167,7 +167,13 @@ def register():
 
         # 保存到数据库
         user_dict = new_user.to_dict(include_sensitive=True)
-        collection.insert_one(user_dict)
+        result = collection.insert_one(user_dict)
+
+        # 添加id字段（字符串格式的ObjectId）
+        collection.update_one(
+            {'_id': result.inserted_id},
+            {'$set': {'id': str(result.inserted_id)}}
+        )
 
         # 返回用户信息（不包含敏感信息）
         return jsonify({
@@ -250,6 +256,8 @@ def login():
             }), 401
 
         # 验证密码
+        # 保存原始的_id用于后续更新
+        original_id = user_dict['_id']
         user_dict['id'] = str(user_dict.pop('_id'))
         user = User.from_dict(user_dict)
 
@@ -277,7 +285,7 @@ def login():
 
         # 更新最后登录时间
         collection.update_one(
-            {'_id': user_dict['_id']},
+            {'_id': original_id},
             {'$set': {'updated_at': datetime.utcnow().isoformat()}}
         )
 
@@ -325,9 +333,19 @@ def get_current_user():
                 'error': '无法获取用户信息'
             }), 401
 
-        # 查找用户
+        # 查找��户 - 支持字符串ID或ObjectId
+        from bson import ObjectId
         collection = get_users_collection()
-        user_dict = collection.find_one({'_id': user_id})
+
+        # 尝试使用id字段查找（字符串）
+        user_dict = collection.find_one({'id': user_id})
+
+        # 如果没找到，尝试使用_id字段查找（ObjectId）
+        if not user_dict:
+            try:
+                user_dict = collection.find_one({'_id': ObjectId(user_id)})
+            except:
+                pass
 
         if not user_dict:
             return jsonify({
@@ -336,7 +354,8 @@ def get_current_user():
             }), 404
 
         # 转换为User对象
-        user_dict['id'] = str(user_dict.pop('_id'))
+        if '_id' in user_dict:
+            user_dict['id'] = str(user_dict.pop('_id'))
         user = User.from_dict(user_dict)
 
         return jsonify({

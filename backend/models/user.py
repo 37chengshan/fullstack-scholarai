@@ -152,7 +152,6 @@ class User:
             Dict: 用户信息字典
         """
         data = {
-            "id": self.id,
             "email": self.email,
             "name": self.name,
             "avatar": self.avatar,

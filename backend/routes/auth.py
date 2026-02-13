@@ -25,8 +25,11 @@ def get_users_collection():
     global users_collection
     if users_collection is None:
         users_collection = get_collection('users')
-        # 创建email唯一索引
-        users_collection.create_index('email', unique=True, sparse=True)
+        # 创建email唯一索引（如果不存在）
+        try:
+            users_collection.create_index([('email', 1)], unique=True, sparse=True, name='email_1')
+        except Exception:
+            pass  # 索引已存在，忽略错误
     return users_collection
 
 
@@ -164,7 +167,6 @@ def register():
 
         # 保存到数据库
         user_dict = new_user.to_dict(include_sensitive=True)
-        user_dict['_id'] = user_dict.pop('id')  # 将id字段作为_id
         collection.insert_one(user_dict)
 
         # 返回用户信息（不包含敏感信息）

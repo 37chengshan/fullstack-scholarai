@@ -70,7 +70,7 @@ def document_to_project(doc: dict) -> Project:
 
 
 @projects_bp.route('', methods=['GET'])
-@jwt_required_custom
+@jwt_required_custom()
 def get_projects():
     """
     获取用户所有项目
@@ -134,7 +134,7 @@ def get_projects():
 
 
 @projects_bp.route('', methods=['POST'])
-@jwt_required_custom
+@jwt_required_custom()
 def create_project():
     """
     创建新项目
@@ -219,7 +219,7 @@ def create_project():
 
 
 @projects_bp.route('/<project_id>', methods=['GET'])
-@jwt_required_custom
+@jwt_required_custom()
 def get_project(project_id: str):
     """
     获取项目详情
@@ -270,7 +270,7 @@ def get_project(project_id: str):
 
 
 @projects_bp.route('/<project_id>', methods=['PUT'])
-@jwt_required_custom
+@jwt_required_custom()
 def update_project(project_id: str):
     """
     更新项目
@@ -398,7 +398,7 @@ def update_project(project_id: str):
 
 
 @projects_bp.route('/<project_id>', methods=['DELETE'])
-@jwt_required_custom
+@jwt_required_custom()
 def delete_project(project_id: str):
     """
     删除项目
@@ -452,7 +452,7 @@ def delete_project(project_id: str):
 
 
 @projects_bp.route('/<project_id>/papers', methods=['POST'])
-@jwt_required_custom
+@jwt_required_custom()
 def add_paper_to_project(project_id: str):
     """
     添加论文到项目
@@ -540,7 +540,7 @@ def add_paper_to_project(project_id: str):
 
 
 @projects_bp.route('/<project_id>/papers/<paper_id>', methods=['DELETE'])
-@jwt_required_custom
+@jwt_required_custom()
 def remove_paper_from_project(project_id: str, paper_id: str):
     """
     从项目移除论文
@@ -606,7 +606,7 @@ def remove_paper_from_project(project_id: str, paper_id: str):
 
 
 @projects_bp.route('/<project_id>/papers/<paper_id>/status', methods=['PUT'])
-@jwt_required_custom
+@jwt_required_custom()
 def update_paper_status(project_id: str, paper_id: str):
     """
     更新项目中的论文状态

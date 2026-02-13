@@ -5,7 +5,7 @@ AI聊天与思维导图API路由
 
 import json
 import logging
-from flask import Blueprint, request, jsonify, Response, stream_with_context
+from flask import Blueprint, request, jsonify
 from typing import Dict, List, Optional
 
 from services.zhipu_client import get_zhipu_client
@@ -20,7 +20,7 @@ ai_bp = Blueprint('ai', __name__, url_prefix='/api/ai')
 
 
 @ai_bp.route('/chat', methods=['POST'])
-# @jwt_removed
+@jwt_required_custom
 def chat():
     """
     AI问答（非流式）
@@ -28,12 +28,15 @@ def chat():
     Request:
         {
             "question": "什么是Transformer?",
-            "paper_id": "2301.00001",
-            "chat_history": [...],
+            "paper_id": "2301.00001",  // 可选，关联特定论文
+            "chat_history": [  // 可选，对话历史
+                {"role": "user", "content": "..."},
+                {"role": "assistant", "content": "..."}
+            ],
             "api_config": {
-                "model": "glm-4-flash",
-                "temperature": 0.7,
-                "max_tokens": 2000
+                "model": "glm-4-flash",  // 可选，默认模型
+                "temperature": 0.7,       // 可选
+                "max_tokens": 2000         // 可选
             }
         }
 
@@ -141,7 +144,7 @@ def chat():
 
 
 @ai_bp.route('/chat/stream', methods=['POST'])
-# @jwt_removed
+@jwt_required_custom
 def chat_stream():
     """
     AI问答（流式SSE）

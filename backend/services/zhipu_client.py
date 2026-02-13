@@ -166,7 +166,7 @@ class ZhipuClient:
             "error": f"请求失败: {str(last_error)}"
         }
 
-    async def chat_completion(
+    def chat_completion(
         self,
         messages: List[Dict[str, str]],
         model: str = "glm-4-flash",
@@ -219,7 +219,7 @@ class ZhipuClient:
 
         return self._retry_request(make_request)
 
-    async def chat_completion_stream(
+    def chat_completion_stream(
         self,
         messages: List[Dict[str, str]],
         model: str = "glm-4-flash",

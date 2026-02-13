@@ -965,7 +965,9 @@
       "priority": 2,
       "title": "实现论文详情API集成",
       "description": "实现前端论文详情服务，连接后端论文详情API，获取论文完整信息和速读数据。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-13T11:30:00Z",
+      "session_id": "session-2026-02-13-003",
       "verification_steps": [
         "更新 frontend/src/app/services/papersApi.ts - 添加详情API",
         "实现 getPaperDetails(paper_id) - 获取论文详情",

@@ -127,7 +127,7 @@ def document_to_folder(doc: dict) -> Folder:
 # ==================== 收藏项端点 ====================
 
 @favorites_bp.route('', methods=['GET'])
-@jwt_required_custom
+@jwt_required_custom()
 def get_favorites():
     """
     获取用户收藏列表
@@ -188,7 +188,7 @@ def get_favorites():
 
 
 @favorites_bp.route('/toggle', methods=['POST'])
-@jwt_required_custom
+@jwt_required_custom()
 def toggle_favorite():
     """
     切换收藏状态（添加或移除）
@@ -287,7 +287,7 @@ def toggle_favorite():
 
 
 @favorites_bp.route('/<favorite_id>', methods=['DELETE'])
-@jwt_required_custom
+@jwt_required_custom()
 def delete_favorite(favorite_id: str):
     """
     移除收藏
@@ -331,7 +331,7 @@ def delete_favorite(favorite_id: str):
 
 
 @favorites_bp.route('/<favorite_id>', methods=['PUT'])
-@jwt_required_custom
+@jwt_required_custom()
 def update_favorite(favorite_id: str):
     """
     更新收藏项（移动文件夹、添加笔记、更新标签）
@@ -399,7 +399,7 @@ def update_favorite(favorite_id: str):
 # ==================== 文件夹端点 ====================
 
 @favorites_bp.route('/folders', methods=['GET'])
-@jwt_required_custom
+@jwt_required_custom()
 def get_folders():
     """
     获取用户文件夹列表
@@ -435,7 +435,7 @@ def get_folders():
 
 
 @favorites_bp.route('/folders', methods=['POST'])
-@jwt_required_custom
+@jwt_required_custom()
 def create_folder():
     """
     创建文件夹
@@ -498,7 +498,7 @@ def create_folder():
 
 
 @favorites_bp.route('/folders/<folder_id>', methods=['PUT'])
-@jwt_required_custom
+@jwt_required_custom()
 def update_folder(folder_id: str):
     """
     更新文件夹
@@ -576,7 +576,7 @@ def update_folder(folder_id: str):
 
 
 @favorites_bp.route('/folders/<folder_id>', methods=['DELETE'])
-@jwt_required_custom
+@jwt_required_custom()
 def delete_folder(folder_id: str):
     """
     删除文件夹（及其下的所有收藏项）

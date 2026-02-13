@@ -1,28 +1,27 @@
 """
 Routes Package
 ==============
-Blueprint registration for all API routes.
+Blueprints are defined in their respective modules and imported here for easy access.
 """
 
-from flask import Blueprint
+# Import all blueprints from their modules
+from .auth import auth_bp
+from .paper_reader import paper_reader_bp
+from .papers import papers_bp
+from .papers_ai import papers_ai_bp
+from .ai import ai_bp
+from .projects import projects_bp
+from .settings import settings_bp
+from .favorites import favorites_bp
 
-# Authentication routes
-auth_bp = Blueprint('auth', __name__)
-
-# Papers routes
-papers_bp = Blueprint('papers', __name__)
-
-# AI routes
-ai_bp = Blueprint('ai', __name__)
-
-# Projects routes
-projects_bp = Blueprint('projects', __name__)
-
-# Favorites routes
-favorites_bp = Blueprint('favorites', __name__)
-
-# Settings routes
-settings_bp = Blueprint('settings', __name__)
-
-# Import route handlers (will be implemented in task-006, task-007, etc.)
-# Placeholder imports to prevent circular import errors
+# Export all blueprints
+__all__ = [
+    'auth_bp',
+    'paper_reader_bp',
+    'papers_bp',
+    'papers_ai_bp',
+    'ai_bp',
+    'projects_bp',
+    'settings_bp',
+    'favorites_bp'
+]

@@ -1,5 +1,5 @@
-# ScholarAI Auto-Dev Loop (Simplified)
-# ASCII Only, English Only
+# ScholarAI Auto-Dev Loop - Final Working Version
+# Uses direct prompt string to avoid pipe issues
 
 param(
     [Parameter(Mandatory=$true)]
@@ -19,6 +19,32 @@ Write-Host "  Mode: Unattended (Auto-Yes)" -ForegroundColor Green
 Write-Host "  Project: $ProjectDir" -ForegroundColor Gray
 Write-Host ""
 Write-Host "========================================"
+
+function Invoke-Claude {
+    param([string]$Prompt)
+
+    # Save prompt to temp env var to avoid argument length issues
+    $env:CLAUDE_PROMPT = $Prompt
+
+    # Create inline batch to execute
+    $batchScript = @"
+@echo off
+setlocal
+set PROMPT=%CLAUDE_PROMPT%
+claude -p "%PROMPT%" --print --dangerously-skip-permissions
+endlocal
+"@
+    $tempBat = [IO.Path]::GetTempFileName() + ".bat"
+    $batchScript | Out-File -FilePath $tempBat -Encoding ASCII -Force
+
+    try {
+        & $tempBat
+        return $LASTEXITCODE
+    }
+    finally {
+        Remove-Item $tempBat -ErrorAction SilentlyContinue
+    }
+}
 
 while ($CurrentIteration -lt $MaxIterations) {
     $CurrentIteration++
@@ -50,54 +76,25 @@ while ($CurrentIteration -lt $MaxIterations) {
         break
     }
 
-    # Create prompt file
-    $promptContent = @"
-You are now a development assistant for ScholarAI project.
-
-IMPORTANT: Work on ONE task at a time. Follow this workflow:
-
-1. Read tasks.json from $ProjectDir
-2. Select ONE PENDING task (priority=1 first)
-3. Update task status to in_progress
-4. Implement according to verification_steps
-5. Use TDD: write tests first
-6. Test your implementation
-7. Commit to git with conventional format
-8. Update task status to completed
-9. Add completed_at timestamp
-10. Write session summary to Progress-Logs folder
-
-Project directory: $ProjectDir
-Session ID: $sessionId
-
-Start working now!
-"@
-
-    $promptFile = "$ProjectDir\auto-prompt-current.txt"
-    $promptContent | Out-File -FilePath $promptFile -Encoding UTF8 -Force
+    # Create prompt
+    $promptContent = "You are now a development assistant for ScholarAI project.`n`nIMPORTANT: Work on ONE task at a time. Follow this workflow:`n`n1. Read tasks.json from $ProjectDir`n2. Select ONE PENDING task (priority=1 first)`n3. Update task status to in_progress`n4. Implement according to verification_steps`n5. Use TDD: write tests first`n6. Test your implementation`n7. Commit to git with conventional format`n8. Update task status to completed`n9. Add completed_at timestamp`n10. Write session summary to Progress-Logs folder`n`nProject directory: $ProjectDir`nSession ID: $sessionId`n`nStart working now!"
 
     Write-Host "Starting Claude Code..." -ForegroundColor Blue
     Write-Host ""
 
     $env:CLAUDE_PROJECT_DIR = $ProjectDir
 
-    # Change to project directory and run claude
-    Push-Location $ProjectDir
-    try {
-        $process = Start-Process -FilePath "cmd" -ArgumentList "/c", "type auto-prompt-current.txt | claude --print --dangerously-skip-permissions" -Wait -NoNewWindow -PassThru
-    }
-    finally {
-        Pop-Location
-    }
+    # Run Claude
+    $exitCode = Invoke-Claude -Prompt $promptContent
 
     $iterationEnd = Get-Date
     $duration = $iterationEnd - $iterationStart
     $minutes = [int]$duration.TotalMinutes
 
-    if ($process.ExitCode -eq 0) {
+    if ($exitCode -eq 0) {
         Write-Host "  SUCCESS (${minutes}m $duration.Seconds s)" -ForegroundColor Green
     } else {
-        Write-Host "  FAILED (Exit code: $($process.ExitCode))" -ForegroundColor Red
+        Write-Host "  FAILED (Exit code: $exitCode)" -ForegroundColor Red
     }
 
     Start-Sleep -Seconds 1

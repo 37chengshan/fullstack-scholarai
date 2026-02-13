@@ -1,5 +1,5 @@
-# ScholarAI Auto-Dev Loop (Simplified)
-# ASCII Only, English Only
+# ScholarAI Auto-Dev Loop - Fixed Version
+# Uses batch wrapper to avoid PowerShell argument issues
 
 param(
     [Parameter(Mandatory=$true)]
@@ -19,6 +19,15 @@ Write-Host "  Mode: Unattended (Auto-Yes)" -ForegroundColor Green
 Write-Host "  Project: $ProjectDir" -ForegroundColor Gray
 Write-Host ""
 Write-Host "========================================"
+
+# Create wrapper batch file
+$wrapperBat = @"
+@echo off
+set CLAUDE_PROJECT_DIR=D:\ai\fullstack-merged
+type auto-prompt-current.txt | claude --print --dangerously-skip-permissions
+"@
+
+$wrapperBat | Out-File -FilePath "$ProjectDir\run-claude.bat" -Encoding ASCII
 
 while ($CurrentIteration -lt $MaxIterations) {
     $CurrentIteration++
@@ -79,12 +88,11 @@ Start working now!
     Write-Host "Starting Claude Code..." -ForegroundColor Blue
     Write-Host ""
 
-    $env:CLAUDE_PROJECT_DIR = $ProjectDir
-
-    # Change to project directory and run claude
+    # Run wrapper batch
     Push-Location $ProjectDir
     try {
-        $process = Start-Process -FilePath "cmd" -ArgumentList "/c", "type auto-prompt-current.txt | claude --print --dangerously-skip-permissions" -Wait -NoNewWindow -PassThru
+        $batPath = Join-Path $ProjectDir "run-claude.bat"
+        $process = Start-Process -FilePath $batPath -Wait -NoNewWindow -PassThru
     }
     finally {
         Pop-Location

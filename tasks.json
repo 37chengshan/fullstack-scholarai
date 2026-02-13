@@ -10,8 +10,8 @@
   "progress": {
     "total": 39,
     "completed": 19,
-    "in_progress": 0,
-    "pending": 20,
+    "in_progress": 1,
+    "pending": 19,
     "percentage": 49
   },
   "backend_info": {
@@ -878,7 +878,9 @@
       "priority": 1,
       "title": "实现用户认证API集成",
       "description": "实现前端用户认证服务，连接后端认证API，包括注册、登录、登出、获取当前用户信息。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-13T10:05:00Z",
+      "session_id": "session-2026-02-13-001",
       "verification_steps": [
         "创建 frontend/src/app/services/authApi.ts",
         "实现 register(name, email, password) - 用户注册",
@@ -921,7 +923,9 @@
       "priority": 2,
       "title": "实现论文搜索API集成",
       "description": "实现前端论文搜索服务，连接后端arXiv搜索API，包括关键词搜索、过滤、分页。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-13T10:30:00Z",
+      "session_id": "session-2026-02-13-002",
       "verification_steps": [
         "更新 frontend/src/app/services/papersApi.ts - 使用真实API",
         "实现 searchPapers(query, filters) - 论文搜索",

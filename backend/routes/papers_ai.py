@@ -12,7 +12,7 @@ from services.arxiv_client import ArxivClient
 from services.zhipu_client import ZhipuClient
 import json
 
-papers_ai_bp = Blueprint('papers_ai', __name__, url_prefix='/api/papers')
+papers_ai_bp = Blueprint('papers_ai', __name__, url_prefix='/api/papers-ai')
 
 
 def get_papers_context(paper_ids: list) -> str:

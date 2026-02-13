@@ -8,11 +8,11 @@
     "ai_service": "智谱AI API (知识库 + Agent API)"
   },
   "progress": {
-    "total": 42,
-    "completed": 22,
+    "total": 40,
+    "completed": 25,
     "in_progress": 0,
-    "pending": 20,
-    "percentage": 52
+    "pending": 15,
+    "percentage": 62
   },
   "backend_info": {
     "url": "http://localhost:5000",
@@ -1003,7 +1003,7 @@
       "priority": 1,
       "title": "实现AI聊天API集成（流式响应）",
       "description": "实现前端AI聊天服务，连接后端AI聊天API，支持流式响应（Server-Sent Events）。",
-      "status": "pending",
+      "status": "completed",
       "verification_steps": [
         "创建 frontend/src/app/services/aiChatApi.ts",
         "实现 sendChatMessage(question, chat_history, paper_id?) - 发送聊天消息",
@@ -1037,7 +1037,9 @@
       "dependencies": [
         "task-019",
         "task-011"
-      ]
+      ],
+      "completed_at": "2026-02-13T14:14:26Z",
+      "session_id": "session-2026-02-13-006"
     },
     {
       "id": "task-024",

@@ -4,8 +4,9 @@ Papers API Routes
 """
 
 from flask import Blueprint, request, jsonify
-from services.openalex_client import get_openalex_client
 import logging
+from services.unified_search_fix import get_fixed_paper_search  # Use fixed version with correct OpenAlex filters
+from services.openalex_client import get_openalex_client  # Import OpenAlex client
 
 # 创建蓝图
 papers_bp = Blueprint('papers', __name__, url_prefix='/api/papers')
@@ -19,7 +20,7 @@ def search_papers():
 
     Query Parameters:
         query: 搜索关键词 (必填)
-        field: 领域过滤 (可选)
+        field: 领域过滤 (��选)
         year_min: 最小年份 (可选)
         year_max: 最大年份 (可选)
         venue: 发表场所 (可选)
@@ -50,15 +51,20 @@ def search_papers():
         if page_size < 1 or page_size > 200:
             page_size = 20
 
-        # 获取OpenAlex客户端
-        client = get_openalex_client()
+        # 获取OpenAlex客户端（使用fixed版本）
+        from services.unified_search_fix import get_fixed_paper_search  # Use fixed version with correct OpenAlex filters
+
+        client = get_fixed_paper_search().openalex_client
 
         # 构建过滤条件
         filter_fields = {}
-        if year_min:
-            filter_fields['from_publication_year'] = year_min
-        if year_max:
-            filter_fields['to_publication_year'] = year_max
+        if year_min and year_max:
+            # OpenAlex API format: publication_year|2020-2024
+            filter_fields['publication_year'] = f'{year_min}|{year_max}'
+        elif year_min:
+            filter_fields['publication_year'] = f'>{year_min}'
+        elif year_max:
+            filter_fields['publication_year'] = f'<{year_max}'
         if venue:
             # OpenAlex使用venue filter
             filter_fields['venue'] = venue

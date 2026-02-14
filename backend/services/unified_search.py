@@ -90,7 +90,8 @@ class UnifiedPaperSearch:
         openalex_filters = {}
         if year_min or year_max:
             if year_min and year_max:
-                openalex_filters['publication_year'] = f'{year_min}-{year_max}'
+                # OpenAlex publication_year filter format: publication_year:2020-2024 (hyphen-separated range)
+                openalex_filters['publication_year'] = f'{year_min},{year_max}'
             elif year_min:
                 openalex_filters['publication_year'] = f'>{year_min}'
             elif year_max:

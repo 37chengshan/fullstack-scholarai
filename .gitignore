@@ -119,3 +119,23 @@ Thumbs.db
 *.temp
 tmp/
 temp/
+
+# ===========================================
+# Project Specific
+# ===========================================
+# Beads tool data
+.beads/
+.serena/
+
+# Progress logs and reports
+Progress-Logs/*.md
+test-results/screenshots/
+
+# Backup files
+*.backup
+
+# Test artifacts
+nul
+test-*.html
+test-*.json
+test-*.mjs

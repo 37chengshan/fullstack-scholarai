@@ -32,7 +32,25 @@ def main():
     print("=" * 60)
     print("\nStarting server...\n")
 
-    app.run(host=host, port=port, debug=debug)
+    # Windows: use threading to run in background
+    import threading
+
+    def run_server():
+        app.run(host=host, port=port, debug=debug, use_reloader=False)
+
+    server_thread = threading.Thread(target=run_server, daemon=True)
+    server_thread.start()
+
+    print(f"Server running on http://{host}:{port}")
+    print("Press CTRL+C to stop")
+
+    try:
+        # Keep main thread alive
+        while server_thread.is_alive():
+            server_thread.join(0.1)
+    except KeyboardInterrupt:
+        print("\nShutting down server...")
+        os._exit(0)
 
 
 if __name__ == '__main__':

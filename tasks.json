@@ -9,10 +9,10 @@
   },
   "progress": {
     "total": 40,
-    "completed": 27,
+    "completed": 29,
     "in_progress": 0,
-    "pending": 13,
-    "percentage": 68
+    "pending": 11,
+    "percentage": 72.5
   },
   "backend_info": {
     "url": "http://localhost:5000",
@@ -1272,7 +1272,9 @@
       "priority": 2,
       "title": "更新登录注册页面使用真实API",
       "description": "更新HomePage.tsx的登录注册表单，连接真实后端认证API，替换表单提交逻辑。",
-      "status": "in_progress",
+      "status": "completed",
+      "completed_at": "2026-02-14T13:00:00Z",
+      "session_id": "session-2026-02-14-002",
       "verification_steps": [
         "更新 HomePage.tsx - 使用authApi.register和authApi.login",
         "实现表单验证（email格式、密码长度）",

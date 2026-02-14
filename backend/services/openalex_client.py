@@ -198,17 +198,38 @@ class OpenAlexClient:
             filters = []
             for key, value in filter_fields.items():
                 if isinstance(value, list):
-                    filters.append(f"{key}:{','.join(value)}")
+                    # For date ranges, use comma separator (e.g., from_publication_year:2020,to_publication_year:2024)
+                    if key in ['from_publication_year', 'to_publication_year']:
+                        from urllib.parse import quote_plus
+                        # Manually construct filter without colons to avoid double URL-encoding
+                        filters.append(f"{key}:{value}")
+                    else:
+                        filters.append(f"{key}:{','.join(str(v) for v in value)}")
                 else:
                     filters.append(f"{key}:{value}")
             if filters:
-                params['filter'] = ','.join(filters)
+                # Encode the entire filter string manually to avoid double URL-encoding
+                from urllib.parse import urlencode
+                filter_string = ','.join(filters)
+                params['filter'] = filter_string
 
         try:
             # 发送请求
+            # Construct full URL manually to avoid double URL-encoding
+            url = f"{self.API_BASE}/works"
+            query_params = []
+            if params:
+                for key, value in params.items():
+                    if isinstance(value, list):
+                        query_params.append(f"{key}={','.join(str(v) for v in value)}")
+                    else:
+                        query_params.append(f"{key}={value}")
+            
+            if query_params:
+                url += '?' + '&'.join(query_params)
+            
             response = self.session.get(
-                f"{self.API_BASE}/works",
-                params=params,
+                url,
                 timeout=30
             )
             response.raise_for_status()
@@ -225,6 +246,9 @@ class OpenAlexClient:
 
             # 计算总页数
             total_pages = (total_results + per_page - 1) // per_page if total_results > 0 else 0
+
+            # 调试信息
+            print(f"DEBUG: meta={meta}, total_results={total_results}, per_page={per_page}, len(papers)={len(papers)}")
 
             return {
                 'success': True,

@@ -7,8 +7,8 @@ from flask import Blueprint, request, jsonify
 from services.unified_search import get_unified_search
 import asyncio
 
-# 创建蓝图
-unified_papers_bp = Blueprint('unified_papers', __name__, url_prefix='/api/papers')
+# 创建蓝图 - 使用不同的url_prefix避免与papers_bp冲突
+unified_papers_bp = Blueprint('unified_papers', __name__, url_prefix='/api/unified-papers')
 
 
 @unified_papers_bp.route('/search/unified', methods=['GET'])

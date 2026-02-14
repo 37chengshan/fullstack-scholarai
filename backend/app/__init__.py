@@ -43,9 +43,10 @@ def create_app(config_name='development'):
     # Initialize extensions
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:5173", "http://localhost:3000"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
+            "origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5173", "http://localhost:3000"],
+            "methods": ["GET", "POST", "PUT", " DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
         }
     })
 
@@ -69,9 +70,11 @@ def create_app(config_name='development'):
     from routes.settings import settings_bp
     from routes.favorites import favorites_bp
     from routes.upload import upload_bp
+    from routes.unified_papers import unified_papers_bp  # unified_papers_bp has url_prefix='/api/papers'
 
     app.register_blueprint(auth_bp)  # auth_bp already has url_prefix='/api/auth'
     app.register_blueprint(paper_reader_bp, url_prefix='/api/papers')
+    app.register_blueprint(unified_papers_bp)  # unified_papers_bp already has url_prefix='/api/papers' - MUST be before papers_bp to avoid route conflicts
     app.register_blueprint(papers_bp)  # papers_bp already has url_prefix='/api/papers'
     app.register_blueprint(papers_ai_bp)  # papers_ai_bp already has url_prefix='/api/papers-ai'
     app.register_blueprint(ai_bp)  # ai_bp already has url_prefix='/api/ai'

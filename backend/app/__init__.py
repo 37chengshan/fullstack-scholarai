@@ -17,7 +17,7 @@ load_dotenv()
 from middleware.auth import init_jwt, generate_token, jwt_required_custom, get_current_user_id
 
 # Import database configuration
-from routes.pdf_preview import pdf_preview_bp
+# from routes.pdf_preview import pdf_preview_bp  # Temporarily disabled due to syntax error
 from config.database import init_db
 
 
@@ -68,6 +68,7 @@ def create_app(config_name='development'):
     from routes.projects import projects_bp
     from routes.settings import settings_bp
     from routes.favorites import favorites_bp
+    from routes.upload import upload_bp
 
     app.register_blueprint(auth_bp)  # auth_bp already has url_prefix='/api/auth'
     app.register_blueprint(paper_reader_bp, url_prefix='/api/papers')
@@ -77,6 +78,7 @@ def create_app(config_name='development'):
     app.register_blueprint(projects_bp)  # projects_bp already has url_prefix='/api/projects'
     app.register_blueprint(settings_bp)  # settings_bp already has url_prefix='/api/settings'
     app.register_blueprint(favorites_bp)  # favorites_bp already has url_prefix='/api/favorites'
+    app.register_blueprint(upload_bp)  # upload_bp already has url_prefix='/api/upload'
 
     # Health check endpoint
     @app.route('/api/health')

@@ -56,12 +56,20 @@ venv.bak/
 # ===========================================
 # Logs
 # ===========================================
+# General logs
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# Claude Code automation logs
+# Logs excluded because they may contain sensitive session data and large file sizes
+logs/auto-claude/
+
+# Session data (may contain sensitive information)
+fu-stack-automation/logs/
 
 # ===========================================
 # Node / Frontend

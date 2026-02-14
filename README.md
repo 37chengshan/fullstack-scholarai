@@ -27,6 +27,13 @@
 fullstack-merged/
 ├── tasks.json              # 任务清单
 ├── progress.json           # 进度记录
+├── automation/            # 自动化系统
+│   ├── README.md          # 自动化使用指南
+│   ├── start-automation-v2.bat   # 一键启动
+│   ├── run-auto-complete.ps1      # 自动化脚本
+│   ├── monitor-progress.py         # 进度监控
+│   ├── select-next-task.py         # 任务选择
+│   └── watch-progress.bat          # 监控启动
 ├── init.sh                # Unix/Linux 启动脚本
 ├── init.ps1               # Windows 启动脚本
 ├── backend/               # Python 后端
@@ -63,6 +70,17 @@ fullstack-merged/
 - ✅ 编辑项目信息
 - ✅ 删除项目
 - ✅ 项目统计
+
+### 自动化系统 ⭐
+- ✅ 智能任务选择（依赖检查）
+- ✅ 自动化任务完成
+- ✅ 实时进度监控
+- ✅ 可视化进度条
+- ✅ 会话信息跟踪
+- ✅ 错误日志记录
+- ✅ 一键启动（支持监控）
+
+详细使用：`automation/README.md`
 
 ### 论文库
 - ✅ 浏览所有论文

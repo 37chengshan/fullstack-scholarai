@@ -9,10 +9,10 @@
   },
   "progress": {
     "total": 40,
-    "completed": 26,
+    "completed": 27,
     "in_progress": 0,
-    "pending": 14,
-    "percentage": 65
+    "pending": 13,
+    "percentage": 68
   },
   "backend_info": {
     "url": "http://localhost:5000",
@@ -1138,7 +1138,7 @@
       "priority": 2,
       "title": "实现收藏功能API集成",
       "description": "实现前端收藏服务，连接后端收藏API，包括收藏管理、文件夹管理。",
-      "status": "pending",
+      "status": "in_progress",
       "verification_steps": [
         "更新 frontend/src/app/services/favoritesApi.ts - 使用真实API",
         "实现 getFavorites(folder_id?) - 获取收藏列表",
@@ -1186,7 +1186,9 @@
       "priority": 3,
       "title": "实现用户设置API集成",
       "description": "实现前端用户设置服务，连接后端设置API，包括主题、语言、API配置等。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-14T12:00:00Z",
+      "session_id": "session-2026-02-14-001",
       "verification_steps": [
         "创建 frontend/src/app/services/settingsApi.ts",
         "实现 getSettings() - 获取用户设置",
@@ -1229,7 +1231,9 @@
       "priority": 3,
       "title": "实现文件上传API集成",
       "description": "实现前端文件上传服务，支持上传PDF论文到智谱AI知识库。",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-02-14T12:30:00Z",
+      "session_id": "session-2026-02-14-001",
       "verification_steps": [
         "创建 frontend/src/app/services/uploadApi.ts",
         "实现 uploadFile(file, knowledge_id, options) - 上传文件",
@@ -1268,7 +1272,7 @@
       "priority": 2,
       "title": "更新登录注册页面使用真实API",
       "description": "更新HomePage.tsx的登录注册表单，连接真实后端认证API，替换表单提交逻辑。",
-      "status": "pending",
+      "status": "in_progress",
       "verification_steps": [
         "更新 HomePage.tsx - 使用authApi.register和authApi.login",
         "实现表单验证（email格式、密码长度）",
@@ -1298,7 +1302,7 @@
       "priority": 2,
       "title": "更新论文搜索页面使用真实API",
       "description": "更新SearchResults.tsx组件，使用真实后端论文搜索API，替换mock数据。",
-      "status": "pending",
+      "status": "in_progress",
       "verification_steps": [
         "更新 SearchResults.tsx - 使用papersApi.searchPapers",
         "实现搜索表单提交",

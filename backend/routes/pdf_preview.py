@@ -246,10 +246,10 @@ def preview_in_iframe():
                         'proxy_url': proxy_url,
                         'content_type': content_type,
                         'content_length': content_length,
-                        'size_mb': round(int(content_length) / (1024 * 1024), 2) if content_length else 0
+                        'size_mb': round(int(content_length) / (1024 * 1024), 2) if (content_length > 0) else 0
                     }
                     }
-                }), 200
+            }), 200
             else:
                 logger.error(f"Failed to fetch PDF: {pdf_response.status_code}")
                 return jsonify({

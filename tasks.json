@@ -9,10 +9,10 @@
   },
   "progress": {
     "total": 40,
-    "completed": 25,
+    "completed": 26,
     "in_progress": 0,
-    "pending": 15,
-    "percentage": 62
+    "pending": 14,
+    "percentage": 65
   },
   "backend_info": {
     "url": "http://localhost:5000",
